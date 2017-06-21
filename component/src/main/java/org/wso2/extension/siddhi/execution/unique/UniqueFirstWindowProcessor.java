@@ -18,8 +18,11 @@
 
 package org.wso2.extension.siddhi.execution.unique;
 
-
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.state.StateEvent;
@@ -30,23 +33,34 @@ import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
 import org.wso2.siddhi.core.query.processor.Processor;
 import org.wso2.siddhi.core.query.processor.stream.window.FindableProcessor;
 import org.wso2.siddhi.core.query.processor.stream.window.WindowProcessor;
-import org.wso2.siddhi.core.table.EventTable;
+import org.wso2.siddhi.core.table.Table;
+import org.wso2.siddhi.core.util.collection.operator.CompiledCondition;
+import org.wso2.siddhi.core.util.collection.operator.MatchingMetaInfoHolder;
+import org.wso2.siddhi.core.util.collection.operator.Operator;
+import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.parser.OperatorParser;
-import org.wso2.siddhi.core.util.collection.operator.Finder;
-import org.wso2.siddhi.core.util.collection.operator.MatchingMetaStateHolder;
 import org.wso2.siddhi.query.api.expression.Expression;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * class representing unique first window processor implementation.
+ */
+
+// TBD: Annotation description
+@Extension(name = "first", namespace = "unique", description = "TBD", parameters = {
+        @Parameter(name = "abc.def.ghi", description = "TBD", type = {
+                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueFirstWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentHashMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
     private VariableExpressionExecutor[] variableExpressionExecutors;
 
-
-    @Override
-    protected void init(ExpressionExecutor[] attributeExpressionExecutors, ExecutionPlanContext executionPlanContext) {
+    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+            boolean b, SiddhiAppContext siddhiAppContext) {
         variableExpressionExecutors = new VariableExpressionExecutor[attributeExpressionExecutors.length];
         for (int i = 0; i < attributeExpressionExecutors.length; i++) {
             variableExpressionExecutors[i] = (VariableExpressionExecutor) attributeExpressionExecutors[i];
@@ -54,8 +68,8 @@ public class UniqueFirstWindowProcessor extends WindowProcessor implements Finda
 
     }
 
-    @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor, StreamEventCloner streamEventCloner) {
+    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+            StreamEventCloner streamEventCloner) {
         synchronized (this) {
             while (streamEventChunk.hasNext()) {
                 StreamEvent streamEvent = streamEventChunk.next();
@@ -72,24 +86,23 @@ public class UniqueFirstWindowProcessor extends WindowProcessor implements Finda
         nextProcessor.process(streamEventChunk);
     }
 
-    @Override
-    public void start() {
+    @Override public void start() {
         //Do nothing
     }
 
-    @Override
-    public void stop() {
+    @Override public void stop() {
         //Do nothing
     }
 
-    @Override
-    public Object[] currentState() {
-        return new Object[]{map};
+    @Override public Map<String, Object> currentState() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("map", this.map);
+        return map;
     }
 
-    @Override
-    public void restoreState(Object[] state) {
-        map = (ConcurrentHashMap<String, StreamEvent>) state[0];
+    @Override public void restoreState(Map<String, Object> map) {
+
+        this.map = (ConcurrentHashMap<String, StreamEvent>) map.get("map");
     }
 
     private String generateKey(StreamEvent event) {
@@ -100,14 +113,18 @@ public class UniqueFirstWindowProcessor extends WindowProcessor implements Finda
         return stringBuilder.toString();
     }
 
-    @Override
-    public synchronized StreamEvent find(StateEvent matchingEvent, Finder finder) {
-        return finder.find(matchingEvent, map.values(), streamEventCloner);
+    @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+        if (compiledCondition instanceof Operator) {
+            return ((Operator) compiledCondition).find(matchingEvent, map.values(), streamEventCloner);
+        } else {
+            return null;
+        }
     }
 
-    @Override
-    public Finder constructFinder(Expression expression, MatchingMetaStateHolder matchingMetaStateHolder, ExecutionPlanContext executionPlanContext,
-                                  List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, EventTable> eventTableMap) {
-        return OperatorParser.constructOperator(map.values(), expression, matchingMetaStateHolder,executionPlanContext,variableExpressionExecutors,eventTableMap);
+    @Override public CompiledCondition compileCondition(Expression expression,
+            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
+            List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, Table> eventTableMap, String s) {
+        return OperatorParser.constructOperator(this.map.values(), expression, matchingMetaInfoHolder, siddhiAppContext,
+                variableExpressionExecutors, eventTableMap, this.queryName);
     }
 }

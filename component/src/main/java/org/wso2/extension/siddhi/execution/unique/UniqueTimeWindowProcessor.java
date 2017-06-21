@@ -17,7 +17,11 @@
  */
 package org.wso2.extension.siddhi.execution.unique;
 
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.state.StateEvent;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
@@ -29,15 +33,18 @@ import org.wso2.siddhi.core.query.processor.Processor;
 import org.wso2.siddhi.core.query.processor.SchedulingProcessor;
 import org.wso2.siddhi.core.query.processor.stream.window.FindableProcessor;
 import org.wso2.siddhi.core.query.processor.stream.window.WindowProcessor;
-import org.wso2.siddhi.core.table.EventTable;
+import org.wso2.siddhi.core.table.Table;
 import org.wso2.siddhi.core.util.Scheduler;
-import org.wso2.siddhi.core.util.collection.operator.Finder;
-import org.wso2.siddhi.core.util.collection.operator.MatchingMetaStateHolder;
+import org.wso2.siddhi.core.util.collection.operator.CompiledCondition;
+import org.wso2.siddhi.core.util.collection.operator.MatchingMetaInfoHolder;
+import org.wso2.siddhi.core.util.collection.operator.Operator;
+import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.parser.OperatorParser;
 import org.wso2.siddhi.query.api.definition.Attribute;
-import org.wso2.siddhi.query.api.exception.ExecutionPlanValidationException;
+import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.wso2.siddhi.query.api.expression.Expression;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,15 +59,33 @@ import java.util.concurrent.ConcurrentHashMap;
 * In the example query given, 3 is the duration of the window and attribute1 is the unique attribute.
 * According to the given attribute it will give unique events within given time.
 * */
+
+/**
+ * class representing unique time window processor implementation.
+ */
+
+//TBD: annotation description
+@Extension(name = "time", namespace = "unique", description = "TBD", parameters = {
+        @Parameter(name = "abc.def.ghi", description = "TBD", type = {
+                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+
 public class UniqueTimeWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
 
     private ConcurrentHashMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
     private long timeInMilliSeconds;
     private ComplexEventChunk<StreamEvent> expiredEventChunk;
     private Scheduler scheduler;
-    private ExecutionPlanContext executionPlanContext;
+    private SiddhiAppContext siddhiAppContext;
     private volatile long lastTimestamp = Long.MIN_VALUE;
     private VariableExpressionExecutor[] variableExpressionExecutors;
+
+    /**
+     * The getScheduler method of the TimeWindowProcessor, As scheduler is private variable, to access publicly we
+     * use this getter method.
+     */
+    @Override public synchronized Scheduler getScheduler() {
+        return scheduler;
+    }
 
     /**
      * The setScheduler method of the TimeWindowProcessor, As scheduler is private variable, to access publicly we
@@ -68,68 +93,63 @@ public class UniqueTimeWindowProcessor extends WindowProcessor implements Schedu
      *
      * @param scheduler the value of scheduler.
      */
-    @Override
-    public void setScheduler(Scheduler scheduler) {
+    @Override public synchronized void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
 
     /**
-     * The getScheduler method of the TimeWindowProcessor, As scheduler is private variable, to access publicly we
-     * use this getter method.
-     */
-    @Override
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
-
-    /**
-     * The init method of the WindowProcessor, this method will be called before other methods
+     * The init method of the WindowProcessor, this method will be called before other methods.
      *
      * @param attributeExpressionExecutors the executors of each function parameters
-     * @param executionPlanContext         the context of the execution plan
+     * @param siddhiAppContext             the context of the execution plan
+     * @param outputExpectsExpiredEvents   //TBD
+     * @param configReader                 //TBD
      */
-    @Override
-    protected void init(ExpressionExecutor[] attributeExpressionExecutors, ExecutionPlanContext executionPlanContext) {
-        this.executionPlanContext = executionPlanContext;
+    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+            boolean outputExpectsExpiredEvents, SiddhiAppContext siddhiAppContext) {
+        this.siddhiAppContext = siddhiAppContext;
         this.expiredEventChunk = new ComplexEventChunk<StreamEvent>(false);
         variableExpressionExecutors = new VariableExpressionExecutor[attributeExpressionExecutors.length - 1];
         if (attributeExpressionExecutors.length == 2) {
             variableExpressionExecutors[0] = (VariableExpressionExecutor) attributeExpressionExecutors[0];
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
-                    timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue();
+                    timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
+                            .getValue();
 
                 } else if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                    timeInMilliSeconds = (Long) ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue();
+                    timeInMilliSeconds = (Long) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
+                            .getValue();
                 } else {
-                    throw new ExecutionPlanValidationException("UniqueTime window's parameter time should be either" +
-                            " int or long, but found " + attributeExpressionExecutors[0].getReturnType());
+                    throw new SiddhiAppValidationException(
+                            "UniqueTime window's parameter time should be either" + " int or long, but found "
+                                    + attributeExpressionExecutors[0].getReturnType());
                 }
             } else {
-                throw new ExecutionPlanValidationException("UniqueTime window should have constant for time parameter but " +
-                        "found a dynamic attribute " + attributeExpressionExecutors[0].getClass().getCanonicalName());
+                throw new SiddhiAppValidationException(
+                        "UniqueTime window should have constant for time parameter but " + "found a dynamic attribute "
+                                + attributeExpressionExecutors[0].getClass().getCanonicalName());
             }
         } else {
-            throw new ExecutionPlanValidationException("UniqueTime window should only have two parameters " +
-                    "(<string|int|bool|long|double|float> unique attribute, <int|long|time> windowTime), but found "
+            throw new SiddhiAppValidationException("UniqueTime window should only have two parameters "
+                    + "(<string|int|bool|long|double|float> unique attribute, <int|long|time> windowTime), but found "
                     + attributeExpressionExecutors.length + " input attributes");
         }
     }
 
     /**
-     * The main processing method that will be called upon event arrival
+     * The main processing method that will be called upon event arrival.
      *
      * @param streamEventChunk  the stream event chunk that need to be processed
      * @param nextProcessor     the next processor to which the success events need to be passed
      * @param streamEventCloner helps to clone the incoming event for local storage or modification
      */
-    @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-                           StreamEventCloner streamEventCloner) {
+    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+            StreamEventCloner streamEventCloner) {
         synchronized (this) {
             while (streamEventChunk.hasNext()) {
                 StreamEvent streamEvent = streamEventChunk.next();
-                long currentTime = executionPlanContext.getTimestampGenerator().currentTime();
+                long currentTime = siddhiAppContext.getTimestampGenerator().currentTime();
                 StreamEvent oldEvent = null;
                 if (streamEvent.getType() == StreamEvent.Type.CURRENT) {
                     StreamEvent clonedEvent = streamEventCloner.copyStreamEvent(streamEvent);
@@ -139,8 +159,10 @@ public class UniqueTimeWindowProcessor extends WindowProcessor implements Schedu
                     oldEvent = map.put(generateKey(eventClonedForMap), eventClonedForMap);
                     this.expiredEventChunk.add(clonedEvent);
                     if (lastTimestamp < clonedEvent.getTimestamp()) {
-                        scheduler.notifyAt(clonedEvent.getTimestamp() + timeInMilliSeconds);
-                        lastTimestamp = clonedEvent.getTimestamp();
+                        if (scheduler != null) {
+                            scheduler.notifyAt(clonedEvent.getTimestamp() + timeInMilliSeconds);
+                            lastTimestamp = clonedEvent.getTimestamp();
+                        }
                     }
                 }
                 expiredEventChunk.reset();
@@ -178,34 +200,26 @@ public class UniqueTimeWindowProcessor extends WindowProcessor implements Schedu
     /**
      * To find events from the processor event pool, that the matches the matchingEvent based on finder logic.
      *
-     * @param matchingEvent the event to be matched with the events at the processor
-     * @param finder        the execution element responsible for finding the corresponding events that matches
-     *                      the matchingEvent based on pool of events at Processor
+     * @param matchingEvent     the event to be matched with the events at the processor
+     * @param compiledCondition execution element responsible for finding the corresponding events that matches
+     *                          the matchingEvent based on pool of events at Processor
      * @return the matched events
      */
-    @Override
-    public StreamEvent find(StateEvent matchingEvent, Finder finder) {
-        return finder.find(matchingEvent, expiredEventChunk, streamEventCloner);
+
+    @Override public synchronized StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+        if (compiledCondition instanceof Operator) {
+            return ((Operator) compiledCondition).find(matchingEvent, expiredEventChunk, streamEventCloner);
+        } else {
+            return null;
+        }
     }
 
-    /**
-     * To construct a finder having the capability of finding events at the processor that corresponds to the incoming
-     * matchingEvent and the given matching expression logic.
-     *
-     * @param expression                  the matching expression
-     * @param matchingMetaStateHolder     the meta structure of the incoming matchingEvent
-     * @param executionPlanContext        current execution plan context
-     * @param variableExpressionExecutors the list of variable ExpressionExecutors already created
-     * @param eventTableMap               map of event tables
-     * @return finder having the capability of finding events at the processor against the expression and incoming
-     * matchingEvent
-     */
-    @Override
-    public Finder constructFinder(Expression expression, MatchingMetaStateHolder matchingMetaStateHolder,
-                                  ExecutionPlanContext executionPlanContext, List<VariableExpressionExecutor> variableExpressionExecutors,
-                                  Map<String, EventTable> eventTableMap) {
-        return OperatorParser.constructOperator(expiredEventChunk, expression,
-                matchingMetaStateHolder, executionPlanContext, variableExpressionExecutors, eventTableMap);
+    @Override public CompiledCondition compileCondition(Expression expression,
+            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
+            List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, Table> tableMap,
+            String queryName) {
+        return OperatorParser.constructOperator(expiredEventChunk, expression, matchingMetaInfoHolder, siddhiAppContext,
+                variableExpressionExecutors, tableMap, this.queryName);
     }
 
     /**
@@ -214,8 +228,7 @@ public class UniqueTimeWindowProcessor extends WindowProcessor implements Schedu
      * This will be called after initializing the system and before
      * starting to process the events.
      */
-    @Override
-    public void start() {
+    @Override public void start() {
         //Do nothing
     }
 
@@ -224,34 +237,34 @@ public class UniqueTimeWindowProcessor extends WindowProcessor implements Schedu
      * the acquired resources for processing.
      * This will be called before shutting down the system.
      */
-    @Override
-    public void stop() {
+    @Override public void stop() {
         //Do nothing
     }
 
     /**
      * Used to collect the serializable state of the processing element, that need to be
-     * persisted for the reconstructing the element to the same state on a different point of time
+     * persisted for the reconstructing the element to the same state on a different point of time.
      *
-     * @return stateful objects of the processing element as an array
+     * @return stateful objects of the processing element as an map
      */
-    @Override
-    public Object[] currentState() {
-        return new Object[]{expiredEventChunk.getFirst(), map};
+    @Override public Map<String, Object> currentState() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("expiredEventchunck", expiredEventChunk.getFirst());
+        map.put("map", this.map);
+        return map;
     }
 
     /**
      * Used to restore serialized state of the processing element, for reconstructing
      * the element to the same state as if was on a previous point of time.
      *
-     * @param state the stateful objects of the element as an array on
-     *              the same order provided by currentState().
+     * @param map is the stateful objects of the element as an map on
+     *            the same order provided by currentState().
      */
-    @Override
-    public void restoreState(Object[] state) {
+    @Override public void restoreState(Map<String, Object> map) {
         expiredEventChunk.clear();
-        expiredEventChunk.add((StreamEvent) state[0]);
-        map = (ConcurrentHashMap) state[1];
+        expiredEventChunk.add((StreamEvent) map.get("expiredEventchunck"));
+        this.map = (ConcurrentHashMap) map.get("map");
     }
 
     /**
@@ -267,4 +280,5 @@ public class UniqueTimeWindowProcessor extends WindowProcessor implements Schedu
         }
         return stringBuilder.toString();
     }
+
 }

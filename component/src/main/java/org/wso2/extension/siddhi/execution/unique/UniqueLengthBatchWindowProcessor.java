@@ -15,9 +15,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.wso2.extension.siddhi.execution.unique;
 
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.state.StateEvent;
@@ -29,12 +34,14 @@ import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
 import org.wso2.siddhi.core.query.processor.Processor;
 import org.wso2.siddhi.core.query.processor.stream.window.FindableProcessor;
 import org.wso2.siddhi.core.query.processor.stream.window.WindowProcessor;
-import org.wso2.siddhi.core.table.EventTable;
-import org.wso2.siddhi.core.util.collection.operator.Finder;
-import org.wso2.siddhi.core.util.collection.operator.MatchingMetaStateHolder;
+import org.wso2.siddhi.core.table.Table;
+import org.wso2.siddhi.core.util.collection.operator.CompiledCondition;
+import org.wso2.siddhi.core.util.collection.operator.MatchingMetaInfoHolder;
+import org.wso2.siddhi.core.util.collection.operator.Operator;
+import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.parser.OperatorParser;
 import org.wso2.siddhi.query.api.definition.Attribute;
-import org.wso2.siddhi.query.api.exception.ExecutionPlanValidationException;
+import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.wso2.siddhi.query.api.expression.Expression;
 
 import java.util.ArrayList;
@@ -51,25 +58,40 @@ import java.util.Map;
  *
  * Description:
  * The behavior of this window is similar to that of length-batch-window in Siddhi,
- * except that this window keeps only "unique" events in the window. The window will drop any duplicate events.
- * We call two events are "not unique" if a certain attribute (e.g. attribute1 in the sample query given) bares equal values in both the events.
+ * except that this window keeps only "unique" events in the window.
+ * The window will drop any duplicate events.
+ * We call two events are "not unique" if a certain attribute
+ * (e.g. attribute1 in the sample query given) bares equal values in both the events.
  *
  * In the given example query, 3 is the length of the window.
  * attribute1 is the attribute which is checked for uniqueness.
- * Third boolean parameter (which is optional - defaults to false, if not provided), being set to 'true', indicates that this is a "first-unique" window.
- * When a duplicate event arrives, "first-unique" window keeps the first event that came in and drops the event which came later.
- * If the third parameter is set to 'false', then the window is a "last-unique" window; meaning, when a duplicate event arrives,
+ * Third boolean parameter (which is optional - defaults to false, if not provided),
+ * being set to 'true', indicates that this is a "first-unique" window.
+ * When a duplicate event arrives, "first-unique" window keeps the first event that came in
+ * and drops the event which came later.
+ * If the third parameter is set to 'false', then the window is a "last-unique" window;
+ * meaning, when a duplicate event arrives,
  * the last-unique window keeps the event which came later and drops the event which came before.
  *
  * @since 1.0.0
  */
+
+/**
+ * class representing unique length batch window processor implementation.
+ */
+
+// TBD: Annotation description
+@Extension(name = "lengthBatch", namespace = "unique", description = "TBD", parameters = {
+        @Parameter(name = "abc.def.ghi", description = "TBD", type = {
+                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+
 public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements FindableProcessor {
 
     private int windowLength;
     private int count = 0;
     private ComplexEventChunk<StreamEvent> currentEventChunk = new ComplexEventChunk<StreamEvent>(false);
     private ComplexEventChunk<StreamEvent> eventsToBeExpired = null;
-    private ExecutionPlanContext executionPlanContext;
+    private SiddhiAppContext siddhiAppContext;
     private StreamEvent resetEvent = null;
     private VariableExpressionExecutor uniqueKey;
     private Map<Object, StreamEvent> uniqueEventMap = new HashMap<>();
@@ -78,37 +100,43 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
      * The init method of the WindowProcessor, this method will be called before other methods.
      *
      * @param attributeExpressionExecutors the executors of each function parameters
-     * @param executionPlanContext         the context of the execution plan
+     * @param siddhiAppContext             the context of the execution plan
+     * @param configReader                 //TBD
+     * @param b                            //TBD
      */
-    @Override
-    protected void init(ExpressionExecutor[] attributeExpressionExecutors, ExecutionPlanContext executionPlanContext) {
-        this.executionPlanContext = executionPlanContext;
+
+    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+            boolean b, SiddhiAppContext siddhiAppContext) {
+        this.siddhiAppContext = siddhiAppContext;
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 2) {
             if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
                 this.uniqueKey = (VariableExpressionExecutor) attributeExpressionExecutors[0];
             } else {
-                throw new ExecutionPlanValidationException("Unique Length Batch window should have variable " +
-                        "for Unique Key parameter but found an attribute "
-                        + attributeExpressionExecutors[0].getClass().getCanonicalName());
+                throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
+                        + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
+                        .getClass().getCanonicalName());
             }
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
-                    this.windowLength = (Integer)
-                            (((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue());
+                    this.windowLength = (Integer) (((ConstantExpressionExecutor) attributeExpressionExecutors[1])
+                            .getValue());
                 } else {
-                    throw new ExecutionPlanValidationException("Unique Length Batch window's Length parameter should be INT, but found "
-                            + attributeExpressionExecutors[1].getReturnType());
+                    throw new SiddhiAppValidationException(
+                            "Unique Length Batch window's Length parameter should be INT, but found "
+                                    + attributeExpressionExecutors[1].getReturnType());
                 }
             } else {
-                throw new ExecutionPlanValidationException("Unique Length Batch window should have constant " +
-                        "for Length parameter but found a dynamic attribute "
-                        + attributeExpressionExecutors[1].getClass().getCanonicalName());
+                throw new SiddhiAppValidationException("Unique Length Batch window should have constant "
+                        + "for Length parameter but found a dynamic attribute " + attributeExpressionExecutors[1]
+                        .getClass().getCanonicalName());
             }
         } else {
-            throw new ExecutionPlanValidationException("Unique Length batch window should only have two parameters, " +
-                    "but found " + attributeExpressionExecutors.length + " input attributes");
+            throw new SiddhiAppValidationException(
+                    "Unique Length batch window should only have two parameters, " + "but found "
+                            + attributeExpressionExecutors.length + " input attributes");
         }
+
     }
 
     /**
@@ -118,13 +146,12 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
      * @param nextProcessor     the next processor to which the success events need to be passed
      * @param streamEventCloner helps to clone the incoming event for local storage or modification
      */
-    @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-                           StreamEventCloner streamEventCloner) {
+    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+            StreamEventCloner streamEventCloner) {
         List<ComplexEventChunk<StreamEvent>> streamEventChunks = new ArrayList<ComplexEventChunk<StreamEvent>>();
         synchronized (this) {
             ComplexEventChunk<StreamEvent> outputStreamEventChunk = new ComplexEventChunk<StreamEvent>(true);
-            long currentTime = executionPlanContext.getTimestampGenerator().currentTime();
+            long currentTime = siddhiAppContext.getTimestampGenerator().currentTime();
             while (streamEventChunk.hasNext()) {
                 StreamEvent streamEvent = streamEventChunk.next();
                 if (streamEvent.getType() != ComplexEvent.Type.CURRENT) {
@@ -172,8 +199,8 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
         }
     }
 
-    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap ,
-                                                            VariableExpressionExecutor uniqueKey, StreamEvent clonedStreamEvent) {
+    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap, VariableExpressionExecutor uniqueKey,
+            StreamEvent clonedStreamEvent) {
         uniqueEventMap.put(clonedStreamEvent.getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
     }
 
@@ -181,16 +208,14 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
      * This will be called after initializing the system and before
      * starting to process the events.
      */
-    @Override
-    public void start() {
+    @Override public void start() {
         //Do nothing
     }
 
     /**
      * This will be called before shutting down the system.
      */
-    @Override
-    public void stop() {
+    @Override public void stop() {
         //Do nothing
     }
 
@@ -198,14 +223,22 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
      * Used to collect the serializable state of the processing element, that need to be
      * persisted for the reconstructing the element to the same state on a different point of time.
      *
-     * @return stateful objects of the processing element as an array
+     * @return stateful objects of the processing element as a map.
      */
-    @Override
-    public Object[] currentState() {
+    @Override public Map<String, Object> currentState() {
         if (eventsToBeExpired != null) {
-            return new Object[]{currentEventChunk.getFirst(), eventsToBeExpired.getFirst(), count, resetEvent};
+            Map<String, Object> map = new HashMap<>();
+            map.put("currentEventChunk", currentEventChunk.getFirst());
+            map.put("eventsToBeExpired", eventsToBeExpired.getFirst());
+            map.put("count", count);
+            map.put("resetEvent", resetEvent);
+            return map;
         } else {
-            return new Object[]{currentEventChunk.getFirst(), count, resetEvent};
+            Map<String, Object> map = new HashMap<>();
+            map.put("currentEventChunk", currentEventChunk.getFirst());
+            map.put("count", count);
+            map.put("resetEvent", resetEvent);
+            return map;
         }
     }
 
@@ -213,23 +246,22 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
      * Used to restore serialized state of the processing element, for reconstructing
      * the element to the same state as if was on a previous point of time.
      *
-     * @param state the stateful objects of the element as an array on
-     *              the same order provided by currentState().
+     * @param map the stateful objects of the element as a map on
+     *            the same order provided by currentState().
      */
-    @Override
-    public void restoreState(Object[] state) {
-        if (state.length > 3) {
+    @Override public void restoreState(Map<String, Object> map) {
+        if (map.size() > 3) {
             currentEventChunk.clear();
-            currentEventChunk.add((StreamEvent) state[0]);
+            currentEventChunk.add((StreamEvent) map.get("currentEventChunk"));
             eventsToBeExpired.clear();
-            eventsToBeExpired.add((StreamEvent) state[1]);
-            count = (Integer) state[2];
-            resetEvent = (StreamEvent) state[3];
+            eventsToBeExpired.add((StreamEvent) map.get("eventsToBeExpired"));
+            count = (Integer) map.get("count");
+            resetEvent = (StreamEvent) map.get("resetEvent");
         } else {
             currentEventChunk.clear();
-            currentEventChunk.add((StreamEvent) state[0]);
-            count = (Integer) state[1];
-            resetEvent = (StreamEvent) state[2];
+            currentEventChunk.add((StreamEvent) map.get("currentEventChunk"));
+            count = (Integer) map.get("count");
+            resetEvent = (StreamEvent) map.get("resetEvent");
         }
     }
 
@@ -237,34 +269,25 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
      * To find events from the processor event pool, that the matches the matchingEvent based on finder logic.
      *
      * @param matchingEvent the event to be matched with the events at the processor
-     * @param finder        the execution element responsible for finding the corresponding events
-     *                      that matches the matchingEvent based on pool of events at Processor
+     * @param compiledCondition
+     *
      * @return the matched events
      */
-    @Override
-    public synchronized StreamEvent find(StateEvent matchingEvent, Finder finder) {
-        return finder.find(matchingEvent, uniqueEventMap.values(), streamEventCloner);
+
+    @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+        if (compiledCondition instanceof Operator) {
+            return ((Operator) compiledCondition).find(matchingEvent, uniqueEventMap.values(), streamEventCloner);
+        } else {
+            return null;
+        }
+
     }
 
-    /**
-     * To construct a finder having the capability of finding events at the processor that corresponds
-     * to the incoming matchingEvent and the given matching expression logic.
-     *
-     * @param expression                  the matching expression
-     * @param matchingMetaStateHolder     the meta structure of the incoming matchingEvent
-     * @param executionPlanContext        current execution plan context
-     * @param variableExpressionExecutors the list of variable ExpressionExecutors already created
-     * @param eventTableMap               uniqueEventMap of event tables
-     * @return finder having the capability of finding events at the processor against the expression
-     * and incoming matchingEvent
-     */
-    @Override
-    public Finder constructFinder(Expression expression, MatchingMetaStateHolder matchingMetaStateHolder, ExecutionPlanContext executionPlanContext,
-                                  List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, EventTable> eventTableMap) {
-        if (eventsToBeExpired == null) {
-            eventsToBeExpired = new ComplexEventChunk<StreamEvent>(false);
-        }
-        return OperatorParser.constructOperator(uniqueEventMap.values(), expression,
-                matchingMetaStateHolder, executionPlanContext, variableExpressionExecutors, eventTableMap);
+    @Override public CompiledCondition compileCondition(Expression expression,
+            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
+            List<VariableExpressionExecutor> list, Map<String, Table> map, String s) {
+        return OperatorParser
+                .constructOperator(uniqueEventMap.values(), expression, matchingMetaInfoHolder, siddhiAppContext, list,
+                        map, this.queryName);
     }
 }

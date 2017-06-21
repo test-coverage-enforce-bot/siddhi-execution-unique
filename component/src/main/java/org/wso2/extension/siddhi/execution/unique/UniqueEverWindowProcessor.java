@@ -18,8 +18,11 @@
 
 package org.wso2.extension.siddhi.execution.unique;
 
-
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.state.StateEvent;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
@@ -28,28 +31,37 @@ import org.wso2.siddhi.core.executor.ExpressionExecutor;
 import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
 import org.wso2.siddhi.core.query.processor.Processor;
 import org.wso2.siddhi.core.query.processor.stream.window.FindableProcessor;
-import org.wso2.siddhi.core.table.EventTable;
-import org.wso2.siddhi.core.util.parser.OperatorParser;
-import org.wso2.siddhi.core.util.collection.operator.Finder;
-import org.wso2.siddhi.core.util.collection.operator.MatchingMetaStateHolder;
-import org.wso2.siddhi.query.api.expression.Expression;
 import org.wso2.siddhi.core.query.processor.stream.window.WindowProcessor;
+import org.wso2.siddhi.core.table.Table;
+import org.wso2.siddhi.core.util.collection.operator.CompiledCondition;
+import org.wso2.siddhi.core.util.collection.operator.MatchingMetaInfoHolder;
+import org.wso2.siddhi.core.util.collection.operator.Operator;
+import org.wso2.siddhi.core.util.config.ConfigReader;
+import org.wso2.siddhi.core.util.parser.OperatorParser;
+import org.wso2.siddhi.query.api.expression.Expression;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * this is Unique Ever Window Processor implementation.
+ */
+
+// TBD: Annotation description
+@Extension(name = "ever", namespace = "unique", description = "TBD", parameters = {
+        @Parameter(name = "abc", description = "TBD", type = {
+                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueEverWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentHashMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
     private VariableExpressionExecutor[] variableExpressionExecutors;
 
-    /**
-     * The init method of the WindowProcessor, this method will be called before other methods
-     *  @param attributeExpressionExecutors the executors of each function parameters
-     * @param executionPlanContext         the context of the execution plan
-     */
-    @Override
-    protected void init(ExpressionExecutor[] attributeExpressionExecutors, ExecutionPlanContext executionPlanContext) {
+
+    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+            boolean b, SiddhiAppContext siddhiAppContext) {
+
         variableExpressionExecutors = new VariableExpressionExecutor[attributeExpressionExecutors.length];
         for (int i = 0; i < attributeExpressionExecutors.length; i++) {
             variableExpressionExecutors[i] = (VariableExpressionExecutor) attributeExpressionExecutors[i];
@@ -57,16 +69,16 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
     }
 
     /**
-     * The main processing method that will be called upon event arrival
+     * The main processing method that will be called upon event arrival.
      *
-     * @param streamEventChunk  the stream event chunk that need to be processed
-     * @param nextProcessor     the next processor to which the success events need to be passed
-     * @param streamEventCloner helps to clone the incoming event for local storage or modification
+     * @param streamEventChunk  the stream event chunk that need to be processed.
+     * @param nextProcessor     the next processor to which the success events need to be passed.
+     * @param streamEventCloner helps to clone the incoming event for local storage or modification.
      */
-    @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor, StreamEventCloner streamEventCloner) {
+    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+            StreamEventCloner streamEventCloner) {
         synchronized (this) {
-            long currentTime = executionPlanContext.getTimestampGenerator().currentTime();
+            long currentTime = siddhiAppContext.getTimestampGenerator().currentTime();
 
             StreamEvent streamEvent = streamEventChunk.getFirst();
             streamEventChunk.clear();
@@ -94,8 +106,7 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
      * This will be called after initializing the system and before
      * starting to process the events.
      */
-    @Override
-    public void start() {
+    @Override public void start() {
         //Do nothing
     }
 
@@ -104,63 +115,46 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
      * the acquired resources for processing.
      * This will be called before shutting down the system.
      */
-    @Override
-    public void stop() {
+    @Override public void stop() {
         //Do nothing
     }
 
     /**
-     * Used to collect the serializable state of the processing element, that need to be
-     * persisted for the reconstructing the element to the same state on a different point of time
+     * Used to collect the serializable state of the processing element, that need to be.
+     * persisted for the reconstructing the element to the same state on a different point of time.
      *
-     * @return stateful objects of the processing element as an array
+     * @return stateful objects of the processing element as a map.
      */
-    @Override
-    public Object[] currentState() {
-        return new Object[]{map};
+    @Override public Map<String, Object> currentState() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("map", this.map);
+        return map;
     }
 
     /**
      * Used to restore serialized state of the processing element, for reconstructing
      * the element to the same state as if was on a previous point of time.
      *
-     * @param state the stateful objects of the element as an array on
-     *              the same order provided by currentState().
+     * @param map the stateful objects of the element as an map on
+     *            the same order provided by currentState().
      */
-    @Override
-    public void restoreState(Object[] state) {
-        map = (ConcurrentHashMap<String, StreamEvent>) state[0];
+    @Override public synchronized void restoreState(Map<String, Object> map) {
+        this.map = (ConcurrentHashMap<String, StreamEvent>) map.get("map");
     }
 
     /**
      * To find events from the processor event pool, that the matches the matchingEvent based on finder logic.
      *
-     * @param matchingEvent the event to be matched with the events at the processor
-     * @param finder        the execution element responsible for finding the corresponding events that matches
-     *                      the matchingEvent based on pool of events at Processor
+     * @param matchingEvent     the event to be matched with the events at the processor
+     * @param compiledCondition
      * @return the matched events
      */
-    @Override
-    public synchronized StreamEvent find(StateEvent matchingEvent, Finder finder) {
-        return finder.find(matchingEvent, map.values(), streamEventCloner);
-    }
-
-    /**
-     * To construct a finder having the capability of finding events at the processor that corresponds to the incoming
-     * matchingEvent and the given matching expression logic.
-     *
-     * @param expression                  the matching expression
-     * @param matchingMetaStateHolder       the meta structure of the incoming matchingEvent
-     * @param executionPlanContext        current execution plan context
-     * @param variableExpressionExecutors the list of variable ExpressionExecutors already created
-     * @param eventTableMap               map of event tables
-     * @return finder having the capability of finding events at the processor against the expression and incoming
-     * matchingEvent
-     */
-    @Override
-    public Finder constructFinder(Expression expression, MatchingMetaStateHolder matchingMetaStateHolder, ExecutionPlanContext executionPlanContext,
-                                  List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, EventTable> eventTableMap) {
-        return OperatorParser.constructOperator(map.values(), expression, matchingMetaStateHolder, executionPlanContext, variableExpressionExecutors, eventTableMap);
+    @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+        if (compiledCondition instanceof Operator) {
+            return ((Operator) compiledCondition).find(matchingEvent, map.values(), streamEventCloner);
+        } else {
+            return null;
+        }
     }
 
     private String generateKey(StreamEvent event) {
@@ -171,4 +165,19 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
         return stringBuilder.toString();
     }
 
+    /**
+     * @param expression                  the matching expression
+     * @param matchingMetaInfoHolder      the meta structure of the incoming matchingEvent
+     * @param siddhiAppContext            Current execution plan context
+     * @param variableExpressionExecutors the list of variable ExpressionExecutors already created
+     * @param tableMap                    map of event tables
+     * @param s                           TBD
+     * @return                            TBD
+     */
+    @Override public CompiledCondition compileCondition(Expression expression,
+            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
+            List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, Table> tableMap, String s) {
+        return OperatorParser.constructOperator(map.values(), expression, matchingMetaInfoHolder, siddhiAppContext,
+                variableExpressionExecutors, tableMap, this.queryName);
+    }
 }

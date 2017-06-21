@@ -18,48 +18,54 @@
 
 package org.wso2.extension.siddhi.execution.unique;
 
-import junit.framework.Assert;
 import org.apache.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
-import org.wso2.siddhi.core.ExecutionPlanRuntime;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
+import org.wso2.siddhi.core.util.SiddhiTestHelper;
+import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * class representing unique ever window processor test case.
+ */
 public class UniqueEverWindowTestCase {
     private static final Logger log = Logger.getLogger(UniqueEverWindowTestCase.class);
     private long value;
     private boolean eventArrived;
+    private int waitTime = 50;
+    private int timeout = 30000;
+    private AtomicInteger eventCount;
 
-    @Before
-    public void init() {
+    @BeforeMethod public void init() {
         value = 0;
         eventArrived = false;
+        eventCount = new AtomicInteger(0);
+
     }
 
-    @Test
-    public void uniqueEverWindowTest1() throws InterruptedException {
+    @Test public void uniqueEverWindowTest1() throws InterruptedException {
         log.info("uniqueEverWindow test1");
 
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String cseEventStream = "" +
-                "define stream LoginEvents (timeStamp long, ip string);";
-        String query = "" +
-                "@info(name = 'query1') " +
-                "from LoginEvents#window.unique:ever(ip) " +
-                "select count(ip) as ipCount, ip " +
-                "insert into uniqueIps ;";
+        String cseEventStream = "" + "define stream LoginEvents (timeStamp long, ip string);";
+        String query = "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:ever(ip) "
+                + "select count(ip) as ipCount, ip " + "insert into uniqueIps ;";
 
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(cseEventStream + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
 
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (Event event : inEvents) {
+                    eventCount.incrementAndGet();
+                }
                 if (inEvents != null) {
                     value = (Long) inEvents[inEvents.length - 1].getData(0);
                 }
@@ -68,43 +74,40 @@ public class UniqueEverWindowTestCase {
 
         });
 
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("LoginEvents");
-        executionPlanRuntime.start();
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
 
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "192.10.1.3"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "192.10.1.3"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "192.10.1.4"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "192.10.1.3"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "192.10.1.5"});
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "192.10.1.4" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "192.10.1.5" });
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, eventCount, timeout);
+        Assert.assertEquals(eventArrived, true, "Event arrived");
+        Assert.assertEquals(value, 3, "Event max value");
 
-        Assert.assertEquals("Event arrived", true, eventArrived);
-        Assert.assertEquals("Event max value", 3, value);
-
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
     }
 
-    @Test
-    public void uniqueEverWindowTest2() throws InterruptedException {
+    @Test public void uniqueEverWindowTest2() throws InterruptedException {
         log.info("uniqueEverWindow test2");
 
         SiddhiManager siddhiManager = new SiddhiManager();
 
-        String cseEventStream = "" +
-                "define stream LoginEvents (id String , timeStamp long, ip string);";
-        String query = "" +
-                "@info(name = 'query1') " +
-                "from LoginEvents#window.unique:ever(ip) " +
-                "select id, count(ip) as ipCount, ip " +
-                "insert into uniqueIps ;";
+        String cseEventStream = "" + "define stream LoginEvents (id String , timeStamp long, ip string);";
+        String query = "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:ever(ip) "
+                + "select id, count(ip) as ipCount, ip " + "insert into uniqueIps ;";
 
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(cseEventStream + query);
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
 
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (Event event : inEvents) {
+                    eventCount.incrementAndGet();
+                }
+
                 if (inEvents != null) {
                     value = (Long) inEvents[inEvents.length - 1].getData(1);
                 }
@@ -113,21 +116,20 @@ public class UniqueEverWindowTestCase {
 
         });
 
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("LoginEvents");
-        executionPlanRuntime.start();
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
 
-        inputHandler.send(new Object[]{"A1", System.currentTimeMillis(), "192.10.1.3"});
-        inputHandler.send(new Object[]{"A2", System.currentTimeMillis(), "192.10.1.3"});
-        inputHandler.send(new Object[]{"A3", System.currentTimeMillis(), "192.10.1.4"});
-        inputHandler.send(new Object[]{"A4", System.currentTimeMillis(), "192.10.1.3"});
-        inputHandler.send(new Object[]{"A5", System.currentTimeMillis(), "192.10.1.5"});
+        inputHandler.send(new Object[] { "A1", System.currentTimeMillis(), "192.10.1.3" });
+        inputHandler.send(new Object[] { "A2", System.currentTimeMillis(), "192.10.1.3" });
+        inputHandler.send(new Object[] { "A3", System.currentTimeMillis(), "192.10.1.4" });
+        inputHandler.send(new Object[] { "A4", System.currentTimeMillis(), "192.10.1.3" });
+        inputHandler.send(new Object[] { "A5", System.currentTimeMillis(), "192.10.1.5" });
 
-        Thread.sleep(1000);
+        SiddhiTestHelper.waitForEvents(waitTime, 5, eventCount, timeout);
+        Assert.assertEquals(eventArrived, true, "Event arrived");
+        Assert.assertEquals(value, 3, "Event max value");
 
-        Assert.assertEquals("Event arrived", true, eventArrived);
-        Assert.assertEquals("Event max value", 3, value);
-
-        executionPlanRuntime.shutdown();
+        siddhiAppRuntime.shutdown();
     }
 
 }

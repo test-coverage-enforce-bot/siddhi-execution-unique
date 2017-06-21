@@ -18,19 +18,39 @@
 
 package org.wso2.extension.siddhi.execution.unique;
 
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
 import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
 
 import java.util.Map;
 
+/**
+ *  class representing unique first length batch window processor implementation.
+ */
+
+// TBD: Annotation description
+@Extension(
+        name = "firstLengthBatch",
+        namespace = "unique",
+        description = "TBD",
+        parameters = {
+                @Parameter(name = "abc.efg.hjk",
+                        description = "TBD",
+                        type = { DataType.STRING})
+        },
+        examples = @Example(
+                syntax = "TBD",
+                description = "TBD")
+)
+
 public class UniqueFirstLengthBatchWindowProcessor extends UniqueLengthBatchWindowProcessor {
-    @Override
-    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap,
-                                                         VariableExpressionExecutor uniqueKey, StreamEvent clonedStreamEvent) {
-        if (!uniqueEventMap.containsKey(clonedStreamEvent
-                .getAttribute(uniqueKey.getPosition()))) {
-            uniqueEventMap.put(clonedStreamEvent
-                    .getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
+    @Override protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap,
+            VariableExpressionExecutor uniqueKey, StreamEvent clonedStreamEvent) {
+        if (!uniqueEventMap.containsKey(clonedStreamEvent.getAttribute(uniqueKey.getPosition()))) {
+            uniqueEventMap.put(clonedStreamEvent.getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
         }
     }
 }
