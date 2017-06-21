@@ -37,7 +37,7 @@ import java.util.Map;
         namespace = "unique",
         description = "TBD",
         parameters = {
-                @Parameter(name = "abc.def.ghi",
+                @Parameter(name = "abc.dfg.hij",
                         description = "TBD",
                         type = { DataType.STRING})
         },

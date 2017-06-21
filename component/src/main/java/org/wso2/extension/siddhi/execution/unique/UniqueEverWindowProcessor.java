@@ -68,13 +68,6 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
         }
     }
 
-    /**
-     * The main processing method that will be called upon event arrival.
-     *
-     * @param streamEventChunk  the stream event chunk that need to be processed.
-     * @param nextProcessor     the next processor to which the success events need to be passed.
-     * @param streamEventCloner helps to clone the incoming event for local storage or modification.
-     */
     @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
             StreamEventCloner streamEventCloner) {
         synchronized (this) {
@@ -100,55 +93,25 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
         nextProcessor.process(streamEventChunk);
     }
 
-    /**
-     * This will be called only once and this can be used to acquire
-     * required resources for the processing element.
-     * This will be called after initializing the system and before
-     * starting to process the events.
-     */
     @Override public void start() {
         //Do nothing
     }
 
-    /**
-     * This will be called only once and this can be used to release
-     * the acquired resources for processing.
-     * This will be called before shutting down the system.
-     */
+
     @Override public void stop() {
         //Do nothing
     }
 
-    /**
-     * Used to collect the serializable state of the processing element, that need to be.
-     * persisted for the reconstructing the element to the same state on a different point of time.
-     *
-     * @return stateful objects of the processing element as a map.
-     */
     @Override public Map<String, Object> currentState() {
         Map<String, Object> map = new HashMap<>();
         map.put("map", this.map);
         return map;
     }
 
-    /**
-     * Used to restore serialized state of the processing element, for reconstructing
-     * the element to the same state as if was on a previous point of time.
-     *
-     * @param map the stateful objects of the element as an map on
-     *            the same order provided by currentState().
-     */
     @Override public synchronized void restoreState(Map<String, Object> map) {
         this.map = (ConcurrentHashMap<String, StreamEvent>) map.get("map");
     }
 
-    /**
-     * To find events from the processor event pool, that the matches the matchingEvent based on finder logic.
-     *
-     * @param matchingEvent     the event to be matched with the events at the processor
-     * @param compiledCondition
-     * @return the matched events
-     */
     @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
         if (compiledCondition instanceof Operator) {
             return ((Operator) compiledCondition).find(matchingEvent, map.values(), streamEventCloner);
@@ -157,27 +120,19 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
         }
     }
 
+
+    @Override public CompiledCondition compileCondition(Expression expression,
+            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
+            List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, Table> tableMap, String s) {
+        return OperatorParser.constructOperator(map.values(), expression, matchingMetaInfoHolder, siddhiAppContext,
+                variableExpressionExecutors, tableMap, this.queryName);
+    }
+
     private String generateKey(StreamEvent event) {
         StringBuilder stringBuilder = new StringBuilder();
         for (VariableExpressionExecutor executor : variableExpressionExecutors) {
             stringBuilder.append(event.getAttribute(executor.getPosition()));
         }
         return stringBuilder.toString();
-    }
-
-    /**
-     * @param expression                  the matching expression
-     * @param matchingMetaInfoHolder      the meta structure of the incoming matchingEvent
-     * @param siddhiAppContext            Current execution plan context
-     * @param variableExpressionExecutors the list of variable ExpressionExecutors already created
-     * @param tableMap                    map of event tables
-     * @param s                           TBD
-     * @return                            TBD
-     */
-    @Override public CompiledCondition compileCondition(Expression expression,
-            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
-            List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, Table> tableMap, String s) {
-        return OperatorParser.constructOperator(map.values(), expression, matchingMetaInfoHolder, siddhiAppContext,
-                variableExpressionExecutors, tableMap, this.queryName);
     }
 }

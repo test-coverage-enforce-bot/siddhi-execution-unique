@@ -82,7 +82,7 @@ import java.util.Map;
 
 // TBD: Annotation description
 @Extension(name = "lengthBatch", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "abc.def.ghi", description = "TBD", type = {
+        @Parameter(name = "abc.efg.hij", description = "TBD", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements FindableProcessor {
@@ -96,14 +96,6 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
     private VariableExpressionExecutor uniqueKey;
     private Map<Object, StreamEvent> uniqueEventMap = new HashMap<>();
 
-    /**
-     * The init method of the WindowProcessor, this method will be called before other methods.
-     *
-     * @param attributeExpressionExecutors the executors of each function parameters
-     * @param siddhiAppContext             the context of the execution plan
-     * @param configReader                 //TBD
-     * @param b                            //TBD
-     */
 
     @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
             boolean b, SiddhiAppContext siddhiAppContext) {
@@ -139,13 +131,7 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
 
     }
 
-    /**
-     * The main processing method that will be called upon event arrival.
-     *
-     * @param streamEventChunk  the stream event chunk that need to be processed
-     * @param nextProcessor     the next processor to which the success events need to be passed
-     * @param streamEventCloner helps to clone the incoming event for local storage or modification
-     */
+
     @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
             StreamEventCloner streamEventCloner) {
         List<ComplexEventChunk<StreamEvent>> streamEventChunks = new ArrayList<ComplexEventChunk<StreamEvent>>();
@@ -204,27 +190,14 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
         uniqueEventMap.put(clonedStreamEvent.getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
     }
 
-    /**
-     * This will be called after initializing the system and before
-     * starting to process the events.
-     */
     @Override public void start() {
         //Do nothing
     }
 
-    /**
-     * This will be called before shutting down the system.
-     */
     @Override public void stop() {
         //Do nothing
     }
 
-    /**
-     * Used to collect the serializable state of the processing element, that need to be
-     * persisted for the reconstructing the element to the same state on a different point of time.
-     *
-     * @return stateful objects of the processing element as a map.
-     */
     @Override public Map<String, Object> currentState() {
         if (eventsToBeExpired != null) {
             Map<String, Object> map = new HashMap<>();
@@ -242,13 +215,6 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
         }
     }
 
-    /**
-     * Used to restore serialized state of the processing element, for reconstructing
-     * the element to the same state as if was on a previous point of time.
-     *
-     * @param map the stateful objects of the element as a map on
-     *            the same order provided by currentState().
-     */
     @Override public void restoreState(Map<String, Object> map) {
         if (map.size() > 3) {
             currentEventChunk.clear();
@@ -264,15 +230,6 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
             resetEvent = (StreamEvent) map.get("resetEvent");
         }
     }
-
-    /**
-     * To find events from the processor event pool, that the matches the matchingEvent based on finder logic.
-     *
-     * @param matchingEvent the event to be matched with the events at the processor
-     * @param compiledCondition
-     *
-     * @return the matched events
-     */
 
     @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
         if (compiledCondition instanceof Operator) {

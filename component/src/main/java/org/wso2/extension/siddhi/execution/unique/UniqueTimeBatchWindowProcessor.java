@@ -70,7 +70,7 @@ import java.util.Map;
 
 //TBD : annotation description
 @Extension(name = "timeBatch", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "abc.def.ghi", description = "TBD", type = {
+        @Parameter(name = "abc.efg.hij", description = "TBD", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
@@ -87,32 +87,6 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
     private long startTime = 0;
     private VariableExpressionExecutor uniqueKey;
 
-    /**
-     * The setScheduler method of the TimeWindowProcessor, As scheduler is private variable,
-     * to access publicly we use this setter method.
-     *
-     * @param scheduler the value of scheduler.
-     */
-    @Override public synchronized void setScheduler(Scheduler scheduler) {
-        this.scheduler = scheduler;
-    }
-
-    /**
-     * The getScheduler method of the TimeWindowProcessor, As scheduler is private variable,
-     * to access publicly we use this getter method.
-     */
-    @Override public synchronized Scheduler getScheduler() {
-        return scheduler;
-    }
-
-    /**
-     * The init method of the WindowProcessor, this method will be called before other methods.
-     *
-     * @param attributeExpressionExecutors the executors of each function parameters
-     * @param siddhiAppContext             the context of the execution plan
-     * @param configReader                 //TBD
-     * @param b                           //TBD
-     */
     @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
             boolean b, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
@@ -194,13 +168,6 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         }
     }
 
-    /**
-     * The main processing method that will be called upon event arrival.
-     *
-     * @param streamEventChunk  the stream event chunk that need to be processed
-     * @param nextProcessor     the next processor to which the success events need to be passed
-     * @param streamEventCloner helps to clone the incoming event for local storage or modification
-     */
     @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
             StreamEventCloner streamEventCloner) {
         synchronized (this) {
@@ -276,6 +243,15 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         }
     }
 
+
+    @Override public synchronized void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    @Override public synchronized Scheduler getScheduler() {
+        return scheduler;
+    }
+
     protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap, VariableExpressionExecutor uniqueKey,
             StreamEvent clonedStreamEvent) {
         if (!uniqueEventMap.containsKey(clonedStreamEvent.getAttribute(uniqueKey.getPosition()))) {
@@ -294,26 +270,14 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         return currentTime + (timeInMilliSeconds - elapsedTimeSinceLastEmit);
     }
 
-    /**
-     * This will be called after initializing the system and before starting to process the events.
-     */
     @Override public void start() {
         //Do nothing
     }
 
-    /**
-     * This will be called before shutting down the system.
-     */
     @Override public void stop() {
         //Do nothing
     }
 
-    /**
-     * Used to collect the serializable state of the processing element, that need to be
-     * persisted for the reconstructing the element to the same state on a different point of time.
-     *
-     * @return stateful objects of the processing element as an array
-     */
     @Override public Map<String, Object> currentState() {
         if (eventsToBeExpired != null) {
             Map<String, Object> map = new HashMap<>();
@@ -329,13 +293,6 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         }
     }
 
-    /**
-     * Used to restore serialized state of the processing element, for reconstructing
-     * the element to the same state as if was on a previous point of time.
-     *
-     * @param map the stateful objects of the element as a map on
-     *            the same order provided by currentState().
-     */
     @Override public void restoreState(Map<String, Object> map) {
         if (map.size() > 2) {
             currentEventChunk.clear();
@@ -350,13 +307,6 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         }
     }
 
-    /**
-     * To find events from the processor event pool, that the matches the matchingEvent based on finder logic.
-     *
-     * @param matchingEvent     the event to be matched with the events at the processor
-     * @param compiledCondition //TBD
-     * @return the matched events
-     */
     @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
         if (compiledCondition instanceof Operator) {
             return ((Operator) compiledCondition).find(matchingEvent, eventsToBeExpired, streamEventCloner);

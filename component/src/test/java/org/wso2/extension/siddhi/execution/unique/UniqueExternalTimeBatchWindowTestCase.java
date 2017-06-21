@@ -18,7 +18,6 @@ package org.wso2.extension.siddhi.execution.unique;
 
 import org.apache.log4j.Logger;
 import org.testng.Assert;
-//import org.testng.AssertJUnit;
 import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

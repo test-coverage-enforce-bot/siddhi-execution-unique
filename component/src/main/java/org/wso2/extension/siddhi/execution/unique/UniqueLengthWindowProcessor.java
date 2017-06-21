@@ -63,7 +63,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 //TBD:annotation description
 @Extension(name = "length", namespace = "unique", description = "TODO", parameters = {
-        @Parameter(name = "abc.def.ghi", description = "TODO", type = {
+        @Parameter(name = "abc.efg.hij", description = "TODO", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TODO", description = "TODO"))
 
 public class UniqueLengthWindowProcessor extends WindowProcessor implements FindableProcessor {
@@ -72,15 +72,6 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
     private int length;
     private int count = 0;
     private ComplexEventChunk<StreamEvent> expiredEventChunk;
-
-    /**
-     * The init method of the WindowProcessor, this method will be called before other methods.
-     *
-     * @param attributeExpressionExecutors the executors of each function parameters
-     * @param siddhiAppContext             the context of the execution plan
-     * @param configReader                 //TBD
-     * @param b                            //TBD
-     */
 
     @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
             boolean b, SiddhiAppContext siddhiAppContext) {
@@ -97,13 +88,6 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
 
     }
 
-    /**
-     * The main processing method that will be called upon event arrival.
-     *
-     * @param streamEventChunk  the stream event chunk that need to be processed
-     * @param nextProcessor     the next processor to which the success events need to be passed
-     * @param streamEventCloner helps to clone the incoming event for local storage or modification
-     */
     @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
             StreamEventCloner streamEventCloner) {
         synchronized (this) {
@@ -147,31 +131,14 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
         nextProcessor.process(streamEventChunk);
     }
 
-    /**
-     * This will be called only once and this can be used to acquire
-     * required resources for the processing element.
-     * This will be called after initializing the system and before
-     * starting to process the events.
-     */
     @Override public void start() {
         //Do nothing
     }
 
-    /**
-     * This will be called only once and this can be used to release
-     * the acquired resources for processing.
-     * This will be called before shutting down the system.
-     */
     @Override public void stop() {
         //Do nothing
     }
 
-    /**
-     * Used to collect the serializable state of the processing element, that need to be
-     * persisted for the reconstructing the element to the same state on a different point of time.
-     *
-     * @return stateful objects of the processing element as an array
-     */
     @Override public synchronized Map<String, Object> currentState() {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("expiredEventChunk", expiredEventChunk.getFirst());
@@ -181,13 +148,6 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
         return map;
     }
 
-    /**
-     * Used to restore serialized state of the processing element, for reconstructing
-     * the element to the same state as if was on a previous point of time.
-     *
-     * @param map the stateful objects of the element as a map on
-     *            the same order provided by currentState().
-     */
     @Override public synchronized void restoreState(Map<String, Object> map) {
         expiredEventChunk.clear();
         expiredEventChunk.add((StreamEvent) map.get("expiredEventChunk"));
@@ -195,14 +155,6 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
         this.map = (ConcurrentHashMap) map.get("map");
     }
 
-    /**
-     * To find events from the processor event pool, that the matches the matchingEvent based on finder logic.
-     *
-     * @param matchingEvent the event to be matched with the events at the processor
-     * @param compiledCondition
-     *
-     * @return the matched events
-     */
     @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
         if (compiledCondition instanceof Operator) {
             return ((Operator) compiledCondition).find(matchingEvent, expiredEventChunk, streamEventCloner);
@@ -211,12 +163,6 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
         }
     }
 
-    /**
-     * Used to generate key in map to get the old event for current event. It will map key which we give as unique
-     * attribute with the event
-     *
-     * @param event the stream event that need to be processed
-     */
     private String generateKey(StreamEvent event) {
         StringBuilder stringBuilder = new StringBuilder();
         for (VariableExpressionExecutor executor : variableExpressionExecutors) {

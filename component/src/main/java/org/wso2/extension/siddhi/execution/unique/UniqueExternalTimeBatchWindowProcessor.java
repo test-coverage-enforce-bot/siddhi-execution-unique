@@ -175,12 +175,6 @@ public class UniqueExternalTimeBatchWindowProcessor extends WindowProcessor
 
     }
 
-    /**
-     * Here an assumption is taken:
-     * Parameter: timestamp: The time which the window determines as current time and will act upon,
-     * the value of this parameter should be monotonically increasing.
-     * from https://docs.wso2.com/display/CEP400/Inbuilt+Windows#InbuiltWindows-externalTime
-     */
     @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
             StreamEventCloner streamEventCloner) {
 

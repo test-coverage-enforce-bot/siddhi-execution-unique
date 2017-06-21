@@ -52,7 +52,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 // TBD: Annotation description
 @Extension(name = "first", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "abc.def.ghi", description = "TBD", type = {
+        @Parameter(name = "abc.efg.hij", description = "TBD", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueFirstWindowProcessor extends WindowProcessor implements FindableProcessor {
