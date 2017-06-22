@@ -101,7 +101,6 @@ public class UniqueFirstWindowProcessor extends WindowProcessor implements Finda
     }
 
     @Override public void restoreState(Map<String, Object> map) {
-
         this.map = (ConcurrentMap<String, StreamEvent>) map.get("map");
     }
 
