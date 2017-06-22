@@ -28,7 +28,7 @@
 
     <artifactId>siddhi-execution-unique</artifactId>
     <packaging>bundle</packaging>
-    <name>WSO2 Siddhi Execution Unique Extension</name>
+    <name> Siddhi Execution Unique Extension</name>
     <url>http://wso2.org</url>
 
     <dependencies>
