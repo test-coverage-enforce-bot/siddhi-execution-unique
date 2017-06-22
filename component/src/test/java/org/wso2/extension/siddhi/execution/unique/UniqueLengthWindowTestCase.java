@@ -19,46 +19,50 @@
 package org.wso2.extension.siddhi.execution.unique;
 
 import org.apache.log4j.Logger;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.wso2.siddhi.core.ExecutionPlanRuntime;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
+import org.wso2.siddhi.core.util.SiddhiTestHelper;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * class representing unique length window test case implementation.
+ */
 public class UniqueLengthWindowTestCase {
     private static final Logger log = Logger.getLogger(UniqueLengthWindowTestCase.class);
     private int count;
     private long value;
     private boolean eventArrived;
+    private int waitTime = 50;
+    private int timeout = 30000;
+    private AtomicInteger eventCount;
 
-    @Before
-    public void init() {
+    @BeforeMethod public void init() {
         count = 0;
         value = 0;
         eventArrived = false;
+        eventCount = new AtomicInteger(0);
     }
 
-    @Test
-    public void uniqueLengthWindowTest1() throws InterruptedException {
+    @Test public void uniqueLengthWindowTest1() throws InterruptedException {
         log.info("Testing uniqueLength window with no of events smaller than window size");
         final int length = 4;
         SiddhiManager siddhiManager = new SiddhiManager();
-        String cseEventStream = "" +
-                "define stream LoginEvents (timeStamp long, a string, ip string);";
-        String query = "" +
-                "@info(name = 'query1') " +
-                "from LoginEvents#window.unique:length(ip,"+length+") " +
-                "select a, count(ip) as ipCount, ip " +
-                "insert all events into uniqueIps ;";
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(cseEventStream + query);
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+        String cseEventStream = "" + "define stream LoginEvents (timeStamp long, a string, ip string);";
+        String query = "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:length(ip," + length + ") "
+                + "select a, count(ip) as ipCount, ip " + "insert all events into uniqueIps ;";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                eventCount.incrementAndGet();
                 if (inEvents != null) {
                     value = (Long) inEvents[inEvents.length - 1].getData(1);
                 }
@@ -66,33 +70,29 @@ public class UniqueLengthWindowTestCase {
             }
 
         });
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("LoginEvents");
-        executionPlanRuntime.start();
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A1", "192.10.1.4"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A2", "192.10.1.3"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A3", "192.10.1.3"});
-        Thread.sleep(1000);
-        Assert.assertEquals("Event arrived", true, eventArrived);
-        Assert.assertEquals("Event max value", 2, value);
-        executionPlanRuntime.shutdown();
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A1", "192.10.1.4" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A2", "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A3", "192.10.1.3" });
+
+        SiddhiTestHelper.waitForEvents(waitTime, 3, eventCount, timeout);
+        Assert.assertEquals(eventArrived, true, "Event arrived");
+        Assert.assertEquals(value, 2, "Event max value");
+        siddhiAppRuntime.shutdown();
     }
 
-    @Test
-    public void uniqueLengthWindowTest2() throws InterruptedException {
+    @Test public void uniqueLengthWindowTest2() throws InterruptedException {
         log.info("Testing uniqueLength window with no of events greater than window size");
         SiddhiManager siddhiManager = new SiddhiManager();
-        String cseEventStream = "" +
-                "define stream LoginEvents (timeStamp long, a string, ip string);";
-        String query = "" +
-                "@info(name = 'query1') " +
-                "from LoginEvents#window.unique:length(ip,3) " +
-                "select a, count(ip) as ipCount, ip " +
-                "insert all events into uniqueIps ;";
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(cseEventStream + query);
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+        String cseEventStream = "" + "define stream LoginEvents (timeStamp long, a string, ip string);";
+        String query = "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:length(ip,3) "
+                + "select a, count(ip) as ipCount, ip " + "insert all events into uniqueIps ;";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                eventCount.incrementAndGet();
                 if (inEvents != null) {
                     value = (Long) inEvents[inEvents.length - 1].getData(1);
                 }
@@ -100,35 +100,31 @@ public class UniqueLengthWindowTestCase {
             }
 
         });
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("LoginEvents");
-        executionPlanRuntime.start();
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A1", "192.10.1.4"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A2", "192.10.1.3"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A3", "192.10.1.3"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A4", "192.10.1.4"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A5", "192.10.1.5"});
-        Thread.sleep(1000);
-        Assert.assertEquals("Event arrived", true, eventArrived);
-        Assert.assertEquals("Event max value", 3, value);
-        executionPlanRuntime.shutdown();
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A1", "192.10.1.4" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A2", "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A3", "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A4", "192.10.1.4" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A5", "192.10.1.5" });
+
+        SiddhiTestHelper.waitForEvents(waitTime, 5, eventCount, timeout);
+        Assert.assertEquals(eventArrived, true, "Event arrived");
+        Assert.assertEquals(value, 3, "Event max value");
+        siddhiAppRuntime.shutdown();
     }
 
-    @Test
-    public void uniqueLengthWindowTest3() throws InterruptedException {
+    @Test public void uniqueLengthWindowTest3() throws InterruptedException {
         log.info("Testing uniqueLength window with no of events greater than window size");
         SiddhiManager siddhiManager = new SiddhiManager();
-        String cseEventStream = "" +
-                "define stream LoginEvents (timeStamp long, a string, ip string);";
-        String query = "" +
-                "@info(name = 'query1') " +
-                "from LoginEvents#window.unique:length(ip,3) " +
-                "select a, ip " +
-                "insert expired events into uniqueIps ;";
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(cseEventStream + query);
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+        String cseEventStream = "" + "define stream LoginEvents (timeStamp long, a string, ip string);";
+        String query = "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:length(ip,3) " + "select a, ip "
+                + "insert expired events into uniqueIps ;";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                eventCount.incrementAndGet();
                 if (inEvents != null) {
                     value = (Long) inEvents[inEvents.length - 1].getData(1);
                 }
@@ -136,35 +132,31 @@ public class UniqueLengthWindowTestCase {
             }
 
         });
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("LoginEvents");
-        executionPlanRuntime.start();
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A1", "192.10.1.3"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A2", "192.10.1.4"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A3", "192.10.1.4"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A4", "192.10.1.3"});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A5", "192.10.1.5"});
-        Thread.sleep(1000);
-        Assert.assertEquals("Event arrived", true, eventArrived);
-        Assert.assertEquals("Event max value", 0, value);
-        executionPlanRuntime.shutdown();
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A1", "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A2", "192.10.1.4" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A3", "192.10.1.4" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A4", "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A5", "192.10.1.5" });
+
+        SiddhiTestHelper.waitForEvents(waitTime, 2, eventCount, timeout);
+        Assert.assertEquals(eventArrived, true, "Event arrived");
+        Assert.assertEquals(value, 0, "Event max value");
+        siddhiAppRuntime.shutdown();
     }
 
-    @Test
-    public void uniqueLengthWindowTest4() throws InterruptedException {
+    @Test public void uniqueLengthWindowTest4() throws InterruptedException {
         log.info("Testing uniqueLength window with no of events greater than window size");
         SiddhiManager siddhiManager = new SiddhiManager();
-        String cseEventStream = "" +
-                "define stream LoginEvents (timeStamp long, a string, ip string, b double);";
-        String query = "" +
-                "@info(name = 'query1') " +
-                "from LoginEvents#window.unique:length(b,3) " +
-                "select a, count(ip) as ipCount, ip, b " +
-                "insert expired events into uniqueIps ;";
-        ExecutionPlanRuntime executionPlanRuntime = siddhiManager.createExecutionPlanRuntime(cseEventStream + query);
-        executionPlanRuntime.addCallback("query1", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+        String cseEventStream = "" + "define stream LoginEvents (timeStamp long, a string, ip string, b double);";
+        String query = "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:length(b,3) "
+                + "select a, count(ip) as ipCount, ip, b " + "insert expired events into uniqueIps ;";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                eventCount.incrementAndGet();
                 if (inEvents != null) {
                     value = (Long) inEvents[inEvents.length - 1].getData(1);
                 }
@@ -172,17 +164,19 @@ public class UniqueLengthWindowTestCase {
             }
 
         });
-        InputHandler inputHandler = executionPlanRuntime.getInputHandler("LoginEvents");
-        executionPlanRuntime.start();
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A1", "192.10.1.4", 2.112});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A2", "192.10.1.3", 4.33});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A3", "192.10.1.3", 4.333});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A4", "192.10.1.4", 5.3});
-        inputHandler.send(new Object[]{System.currentTimeMillis(), "A5", "192.10.1.5", 6.1});
-        Thread.sleep(1000);
-        Assert.assertEquals("Event arrived", true, eventArrived);
-        Assert.assertEquals("Event max value", 0, value);
-        executionPlanRuntime.shutdown();
+
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A1", "192.10.1.4", 2.112 });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A2", "192.10.1.3", 4.33 });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A3", "192.10.1.3", 4.333 });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A4", "192.10.1.4", 5.3 });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A5", "192.10.1.5", 6.1 });
+
+        SiddhiTestHelper.waitForEvents(waitTime, 2, eventCount, timeout);
+        Assert.assertEquals(eventArrived, true, "Event arrived");
+        Assert.assertEquals(value, 0, "Event max value");
+        siddhiAppRuntime.shutdown();
     }
 
 }

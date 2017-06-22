@@ -17,7 +17,11 @@
  */
 package org.wso2.extension.siddhi.execution.unique;
 
-import org.wso2.siddhi.core.config.ExecutionPlanContext;
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.event.ComplexEvent;
 import org.wso2.siddhi.core.event.ComplexEventChunk;
 import org.wso2.siddhi.core.event.state.StateEvent;
@@ -30,13 +34,15 @@ import org.wso2.siddhi.core.query.processor.Processor;
 import org.wso2.siddhi.core.query.processor.SchedulingProcessor;
 import org.wso2.siddhi.core.query.processor.stream.window.FindableProcessor;
 import org.wso2.siddhi.core.query.processor.stream.window.WindowProcessor;
-import org.wso2.siddhi.core.table.EventTable;
+import org.wso2.siddhi.core.table.Table;
 import org.wso2.siddhi.core.util.Scheduler;
-import org.wso2.siddhi.core.util.collection.operator.Finder;
-import org.wso2.siddhi.core.util.collection.operator.MatchingMetaStateHolder;
+import org.wso2.siddhi.core.util.collection.operator.CompiledCondition;
+import org.wso2.siddhi.core.util.collection.operator.MatchingMetaInfoHolder;
+import org.wso2.siddhi.core.util.collection.operator.Operator;
+import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.parser.OperatorParser;
 import org.wso2.siddhi.query.api.definition.Attribute;
-import org.wso2.siddhi.query.api.exception.ExecutionPlanValidationException;
+import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 import org.wso2.siddhi.query.api.expression.Expression;
 
 import java.util.HashMap;
@@ -57,8 +63,17 @@ import java.util.Map;
  *
  * @since 1.0.0
  */
-public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements SchedulingProcessor,
-        FindableProcessor {
+
+/**
+ * class representing unique time batch window processor implementation.
+ */
+
+//TBD : annotation description
+@Extension(name = "timeBatch", namespace = "unique", description = "TBD", parameters = {
+        @Parameter(name = "parameter", description = "TBD", type = {
+                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+
+public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
 
     private long timeInMilliSeconds;
     private long nextEmitTime = -1;
@@ -67,139 +82,114 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
     private Map<Object, StreamEvent> uniqueEventMap = new HashMap<>();
     private StreamEvent resetEvent = null;
     private Scheduler scheduler;
-    private ExecutionPlanContext executionPlanContext;
+    private SiddhiAppContext siddhiAppContext;
     private boolean isStartTimeEnabled = false;
     private long startTime = 0;
     private VariableExpressionExecutor uniqueKey;
 
-    /**
-     * The setScheduler method of the TimeWindowProcessor, As scheduler is private variable,
-     * to access publicly we use this setter method.
-     *
-     * @param scheduler the value of scheduler.
-     */
-    @Override
-    public void setScheduler(Scheduler scheduler) {
-        this.scheduler = scheduler;
-    }
-
-    /**
-     * The getScheduler method of the TimeWindowProcessor, As scheduler is private variable,
-     * to access publicly we use this getter method.
-     */
-    @Override
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
-
-    /**
-     * The init method of the WindowProcessor, this method will be called before other methods.
-     *
-     * @param attributeExpressionExecutors the executors of each function parameters
-     * @param executionPlanContext         the context of the execution plan
-     */
-    @Override
-    protected void init(ExpressionExecutor[] attributeExpressionExecutors,
-                        ExecutionPlanContext executionPlanContext) {
-        this.executionPlanContext = executionPlanContext;
+    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+            boolean b, SiddhiAppContext siddhiAppContext) {
+        this.siddhiAppContext = siddhiAppContext;
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 2) {
             if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
                 this.uniqueKey = (VariableExpressionExecutor) attributeExpressionExecutors[0];
             } else {
-                throw new ExecutionPlanValidationException("Unique Length Batch window should have variable " +
-                        "for Unique Key parameter but found an attribute " +
-                        attributeExpressionExecutors[0].getClass().getCanonicalName());
+                throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
+                        + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
+                        .getClass().getCanonicalName());
             }
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
-                    timeInMilliSeconds = (Integer)
-                            ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue();
+                    timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
+                            .getValue();
                 } else if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                    timeInMilliSeconds = (Long)
-                            ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue();
+                    timeInMilliSeconds = (Long) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
+                            .getValue();
                 } else {
-                    throw new ExecutionPlanValidationException("Unique Time Batch window's parameter time should be either" +
-                            " int or long, but found " + attributeExpressionExecutors[1].getReturnType());
+                    throw new SiddhiAppValidationException(
+                            "Unique Time Batch window's parameter " + "time should be either"
+                                    + "int or long, but found " + attributeExpressionExecutors[1].getReturnType());
                 }
             } else {
-                throw new ExecutionPlanValidationException("Unique Time Batch window should have constant " +
-                        "for time parameter but found a dynamic attribute "
-                        + attributeExpressionExecutors[1].getClass().getCanonicalName());
+                throw new SiddhiAppValidationException("Unique Time Batch window should have constant "
+                        + "for time parameter but found a dynamic attribute " + attributeExpressionExecutors[1]
+                        .getClass().getCanonicalName());
             }
         } else if (attributeExpressionExecutors.length == 3) {
             if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
                 this.uniqueKey = (VariableExpressionExecutor) attributeExpressionExecutors[0];
             } else {
-                throw new ExecutionPlanValidationException("Unique Length Batch window should have variable " +
-                        "for Unique Key parameter but found an attribute " +
-                        attributeExpressionExecutors[0].getClass().getCanonicalName());
+                throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
+                        + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
+                        .getClass().getCanonicalName());
             }
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
-                    timeInMilliSeconds = (Integer)
-                            ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue();
+                    timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
+                            .getValue();
                 } else if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.LONG) {
-                    timeInMilliSeconds = (Long)
-                            ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue();
+                    timeInMilliSeconds = (Long) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
+                            .getValue();
                 } else {
-                    throw new ExecutionPlanValidationException("UniqueTimeBatch window's parameter time should be either" +
-                            " int or long, but found " + attributeExpressionExecutors[1].getReturnType());
+                    throw new SiddhiAppValidationException(
+                            "UniqueTimeBatch window's parameter time should be either" + " int or long, but found "
+                                    + attributeExpressionExecutors[1].getReturnType());
                 }
             } else {
-                throw new ExecutionPlanValidationException("Unique Time Batch window should have constant " +
-                        "for time parameter but found a dynamic attribute "
-                        + attributeExpressionExecutors[1].getClass().getCanonicalName());
+                throw new SiddhiAppValidationException("Unique Time Batch window should have constant "
+                        + "for time parameter but found a dynamic attribute " + attributeExpressionExecutors[1]
+                        .getClass().getCanonicalName());
             }
             // isStartTimeEnabled used to set start time
             if (attributeExpressionExecutors[2] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[2].getReturnType() == Attribute.Type.INT) {
                     isStartTimeEnabled = true;
-                    startTime = Integer.parseInt(String
-                            .valueOf(((ConstantExpressionExecutor) attributeExpressionExecutors[2]).getValue()));
+                    startTime = Integer.parseInt(
+                            String.valueOf(((ConstantExpressionExecutor) attributeExpressionExecutors[2]).getValue()));
                 } else if (attributeExpressionExecutors[2].getReturnType() == Attribute.Type.LONG) {
                     isStartTimeEnabled = true;
-                    startTime = Long.parseLong(String
-                            .valueOf(((ConstantExpressionExecutor) attributeExpressionExecutors[2]).getValue()));
+                    startTime = Long.parseLong(
+                            String.valueOf(((ConstantExpressionExecutor) attributeExpressionExecutors[2]).getValue()));
                 } else {
-                    throw new ExecutionPlanValidationException("Expected either boolean, int or long type for UniqueTimeBatch window's third parameter, but found "
+                    throw new SiddhiAppValidationException("Expected either boolean, "
+                            + "int or long type for UniqueTimeBatch window's third parameter, but found "
                             + attributeExpressionExecutors[2].getReturnType());
                 }
             } else {
-                throw new ExecutionPlanValidationException("Unique Time Batch window should have constant " +
-                        "for time parameter but found a dynamic attribute "
-                        + attributeExpressionExecutors[2].getReturnType());
+                throw new SiddhiAppValidationException("Unique Time Batch window should have constant "
+                        + "for time parameter but found a dynamic attribute " + attributeExpressionExecutors[2]
+                        .getReturnType());
             }
         } else {
-            throw new ExecutionPlanValidationException("Unique Time Batch window should only have two or Three parameters. " +
-                    "but found " + attributeExpressionExecutors.length + " input attributes");
+            throw new SiddhiAppValidationException(
+                    "Unique Time Batch window should " + "only have two or Three parameters. " + "but found "
+                            + attributeExpressionExecutors.length + " input attributes");
         }
     }
 
-    /**
-     * The main processing method that will be called upon event arrival
-     *
-     * @param streamEventChunk  the stream event chunk that need to be processed
-     * @param nextProcessor     the next processor to which the success events need to be passed
-     * @param streamEventCloner helps to clone the incoming event for local storage or modification
-     */
-    @Override
-    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-                           StreamEventCloner streamEventCloner) {
+    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+            StreamEventCloner streamEventCloner) {
         synchronized (this) {
-            long currentTime = executionPlanContext.getTimestampGenerator().currentTime();
+            long currentTime = siddhiAppContext.getTimestampGenerator().currentTime();
             if (nextEmitTime == -1) {
                 if (isStartTimeEnabled) {
                     nextEmitTime = getNextEmitTime(currentTime);
                 } else {
                     nextEmitTime = currentTime + timeInMilliSeconds;
                 }
-                scheduler.notifyAt(nextEmitTime);
+                if (scheduler != null) {
+                    scheduler.notifyAt(nextEmitTime);
+                }
             }
             boolean sendEvents;
             if (currentTime >= nextEmitTime) {
                 nextEmitTime += timeInMilliSeconds;
-                scheduler.notifyAt(nextEmitTime);
+
+                if (scheduler != null) {
+                    scheduler.notifyAt(nextEmitTime);
+                }
+
                 sendEvents = true;
             } else {
                 sendEvents = false;
@@ -253,12 +243,19 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         }
     }
 
-    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap,
-                                  VariableExpressionExecutor uniqueKey, StreamEvent clonedStreamEvent) {
-        if (!uniqueEventMap.containsKey(clonedStreamEvent
-                .getAttribute(uniqueKey.getPosition()))) {
-            uniqueEventMap.put(clonedStreamEvent
-                    .getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
+
+    @Override public synchronized void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    @Override public synchronized Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap, VariableExpressionExecutor uniqueKey,
+            StreamEvent clonedStreamEvent) {
+        if (!uniqueEventMap.containsKey(clonedStreamEvent.getAttribute(uniqueKey.getPosition()))) {
+            uniqueEventMap.put(clonedStreamEvent.getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
         }
     }
 
@@ -268,97 +265,61 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
      * @param currentTime the current time.
      * @return next emit time
      */
-
     private long getNextEmitTime(long currentTime) {
         long elapsedTimeSinceLastEmit = (currentTime - startTime) % timeInMilliSeconds;
         return currentTime + (timeInMilliSeconds - elapsedTimeSinceLastEmit);
     }
 
-    /**
-     * This will be called after initializing the system and before starting to process the events.
-     */
-    @Override
-    public void start() {
+    @Override public void start() {
         //Do nothing
     }
 
-    /**
-     * This will be called before shutting down the system.
-     */
-    @Override
-    public void stop() {
+    @Override public void stop() {
         //Do nothing
     }
 
-    /**
-     * Used to collect the serializable state of the processing element, that need to be
-     * persisted for the reconstructing the element to the same state on a different point of time.
-     *
-     * @return stateful objects of the processing element as an array
-     */
-    @Override
-    public Object[] currentState() {
+    @Override public Map<String, Object> currentState() {
         if (eventsToBeExpired != null) {
-            return new Object[]{currentEventChunk.getFirst(), eventsToBeExpired.getFirst(), resetEvent};
+            Map<String, Object> map = new HashMap<>();
+            map.put("currentEventChunk", currentEventChunk.getFirst());
+            map.put("eventsToBeExpired", eventsToBeExpired.getFirst());
+            map.put("resetEvent", resetEvent);
+            return map;
         } else {
-            return new Object[]{currentEventChunk.getFirst(), resetEvent};
+            Map<String, Object> map = new HashMap<>();
+            map.put("currentEventChunk", currentEventChunk.getFirst());
+            map.put("resetEvent", resetEvent);
+            return map;
         }
     }
 
-    /**
-     * Used to restore serialized state of the processing element, for reconstructing
-     * the element to the same state as if was on a previous point of time.
-     *
-     * @param state the stateful objects of the element as an array on
-     *              the same order provided by currentState().
-     */
-    @Override
-    public void restoreState(Object[] state) {
-        if (state.length > 2) {
+    @Override public void restoreState(Map<String, Object> map) {
+        if (map.size() > 2) {
             currentEventChunk.clear();
-            currentEventChunk.add((StreamEvent) state[0]);
+            currentEventChunk.add((StreamEvent) map.get("currentEventChunk"));
             eventsToBeExpired.clear();
-            eventsToBeExpired.add((StreamEvent) state[1]);
-            resetEvent = (StreamEvent) state[2];
+            eventsToBeExpired.add((StreamEvent) map.get("eventsToBeExpired"));
+            resetEvent = (StreamEvent) map.get("resetEvent");
         } else {
             currentEventChunk.clear();
-            currentEventChunk.add((StreamEvent) state[0]);
-            resetEvent = (StreamEvent) state[1];
+            currentEventChunk.add((StreamEvent) map.get("currentEventChunk"));
+            resetEvent = (StreamEvent) map.get("resetEvent");
         }
     }
 
-    /**
-     * To find events from the processor event pool, that the matches the matchingEvent based on finder logic.
-     *
-     * @param matchingEvent the event to be matched with the events at the processor
-     * @param finder        the execution element responsible for finding the corresponding events
-     *                      that matches the matchingEvent based on pool of events at Processor
-     * @return the matched events
-     */
-    @Override
-    public synchronized StreamEvent find(StateEvent matchingEvent, Finder finder) {
-        return finder.find(matchingEvent, eventsToBeExpired, streamEventCloner);
+    @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+        if (compiledCondition instanceof Operator) {
+            return ((Operator) compiledCondition).find(matchingEvent, eventsToBeExpired, streamEventCloner);
+        } else {
+            return null;
+        }
     }
 
-    /**
-     * To construct a finder having the capability of finding events at the processor that corresponds
-     * to the incoming matchingEvent and the given matching expression logic.
-     *
-     * @param expression                  the matching expression
-     * @param executionPlanContext        current execution plan context
-     * @param variableExpressionExecutors the list of variable ExpressionExecutors already created
-     * @param eventTableMap               map of event tables
-     * @return finder having the capability of finding events at the processor against the expression
-     * and incoming matchingEvent
-     */
-    @Override
-    public Finder constructFinder(Expression expression, MatchingMetaStateHolder matchingMetaStateHolder,
-                                  ExecutionPlanContext executionPlanContext, List<VariableExpressionExecutor> variableExpressionExecutors,
-                                  Map<String, EventTable> eventTableMap) {
-        if (eventsToBeExpired == null) {
-            eventsToBeExpired = new ComplexEventChunk<StreamEvent>(false);
-        }
-        return OperatorParser.constructOperator(eventsToBeExpired, expression, matchingMetaStateHolder,
-                executionPlanContext, variableExpressionExecutors, eventTableMap);
+    @Override public CompiledCondition compileCondition(Expression expression,
+            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
+            List<VariableExpressionExecutor> list, Map<String, Table> map, String s) {
+        return OperatorParser
+                .constructOperator(eventsToBeExpired, expression, matchingMetaInfoHolder, siddhiAppContext, list, map,
+                        this.queryName);
     }
 }
