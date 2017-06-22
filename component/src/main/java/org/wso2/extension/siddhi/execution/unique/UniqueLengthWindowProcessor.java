@@ -63,7 +63,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 //TBD:annotation description
 @Extension(name = "length", namespace = "unique", description = "TODO", parameters = {
-        @Parameter(name = "abc.efg.hij", description = "TODO", type = {
+        @Parameter(name = "parameter", description = "TODO", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TODO", description = "TODO"))
 
 public class UniqueLengthWindowProcessor extends WindowProcessor implements FindableProcessor {
@@ -144,7 +144,6 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
         map.put("expiredEventChunk", expiredEventChunk.getFirst());
         map.put("count", count);
         map.put("map", this.map);
-        // return new Object[] { expiredEventChunk.getFirst(), count, map };
         return map;
     }
 

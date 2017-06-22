@@ -97,7 +97,7 @@
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>${junit.version}</version>
+                <version>${testng.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

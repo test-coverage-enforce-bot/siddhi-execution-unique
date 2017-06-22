@@ -40,10 +40,12 @@ import org.wso2.siddhi.core.util.config.ConfigReader;
 import org.wso2.siddhi.core.util.parser.OperatorParser;
 import org.wso2.siddhi.query.api.expression.Expression;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import static java.util.Collections.singletonMap;
 
 /**
  * this is Unique Ever Window Processor implementation.
@@ -51,11 +53,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 // TBD: Annotation description
 @Extension(name = "ever", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "abc", description = "TBD", type = {
+        @Parameter(name = "parameter", description = "TBD", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueEverWindowProcessor extends WindowProcessor implements FindableProcessor {
-    private ConcurrentHashMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
+    private ConcurrentMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
     private VariableExpressionExecutor[] variableExpressionExecutors;
 
 
@@ -103,13 +105,11 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
     }
 
     @Override public Map<String, Object> currentState() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("map", this.map);
-        return map;
+        return singletonMap("map", this.map);
     }
 
     @Override public synchronized void restoreState(Map<String, Object> map) {
-        this.map = (ConcurrentHashMap<String, StreamEvent>) map.get("map");
+        this.map = (ConcurrentMap<String, StreamEvent>) map.get("map");
     }
 
     @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {

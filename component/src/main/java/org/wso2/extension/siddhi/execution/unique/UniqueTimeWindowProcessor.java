@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /*
 * Sample Query:
@@ -66,12 +67,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 //TBD: annotation description
 @Extension(name = "time", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "abc.efg.hij", description = "TBD", type = {
+        @Parameter(name = "parameter", description = "TBD", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueTimeWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
 
-    private ConcurrentHashMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
+    private ConcurrentMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
     private long timeInMilliSeconds;
     private ComplexEventChunk<StreamEvent> expiredEventChunk;
     private Scheduler scheduler;
@@ -207,7 +208,7 @@ public class UniqueTimeWindowProcessor extends WindowProcessor implements Schedu
     @Override public void restoreState(Map<String, Object> map) {
         expiredEventChunk.clear();
         expiredEventChunk.add((StreamEvent) map.get("expiredEventchunck"));
-        this.map = (ConcurrentHashMap) map.get("map");
+        this.map = (ConcurrentMap) map.get("map");
     }
 
     /**

@@ -82,7 +82,7 @@ import java.util.Map;
 
 // TBD: Annotation description
 @Extension(name = "lengthBatch", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "abc.efg.hij", description = "TBD", type = {
+        @Parameter(name = "parameter", description = "TBD", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements FindableProcessor {

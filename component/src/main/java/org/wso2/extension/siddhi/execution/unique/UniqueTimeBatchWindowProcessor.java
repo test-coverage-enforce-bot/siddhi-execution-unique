@@ -70,7 +70,7 @@ import java.util.Map;
 
 //TBD : annotation description
 @Extension(name = "timeBatch", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "abc.efg.hij", description = "TBD", type = {
+        @Parameter(name = "parameter", description = "TBD", type = {
                 DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
 
 public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
