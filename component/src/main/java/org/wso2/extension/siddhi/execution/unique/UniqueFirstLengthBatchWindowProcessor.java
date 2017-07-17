@@ -34,9 +34,11 @@ import java.util.Map;
 @Extension(
         name = "firstLengthBatch",
         namespace = "unique",
-        description = "A batch (tumbling) length window that holds first window length unique events"
+        description = "A batch (tumbling) length window that holds window length unique events which arrive first"
                 + " according to the unique key parameter and gets updated"
-                + " on every window length unique events have arrived" ,
+                + " on every window length unique events have arrived."
+                + " When a new event arrives with a key which is already in the window,"
+                + " that event is not processed by the window." ,
 
         parameters = {
                 @Parameter(name = "unique.key",

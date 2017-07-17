@@ -55,12 +55,16 @@ import static java.util.Collections.singletonMap;
         name = "ever",
         namespace = "unique",
         description = "A window that holds latest unique events"
-                + " according to the given unique key parameter",
+                + " according to the given unique key parameter."
+                + " When a new event arrives with a key which is already in the window,"
+                + " then the previous event is expired and new event is kept within the window.",
 
 
         parameters = {
                 @Parameter(name = "unique.key",
-                        description = "The attribute that should be checked for uniqueness.",
+                        description = "The attribute that should be checked for uniqueness."
+                                + " if there are more than one parameter to check for uniqueness,"
+                                + " it can be specified as an array by comma separation",
                         type = {DataType.INT, DataType.LONG, DataType.TIME,
                                 DataType.BOOL, DataType.DOUBLE}),
         },
@@ -73,6 +77,20 @@ import static java.util.Collections.singletonMap;
 
                         description = "This will process latest unique events based on ip that arrived from LoginEvent"
                                 + " and return the all events to the outputStream with ip and ipCount."
+
+
+                ),
+                @Example(
+                        syntax = "define stream LoginEvents (timeStamp long, ip string , id string) ;\n" +
+                                "from LoginEvents#window.unique:ever(ip, id)\n" +
+                                "select count(ip) as ipCount, ip , id \n" +
+                                "insert expired events into uniqueIps  ;",
+
+                        description = "This will process latest unique events based on ip that arrived from LoginEvent"
+                                + " and return expire events to the outputStream with ip , id and ipCount."
+                                + " A event in the window is expired"
+                                + " when a new event arrive with the same ip and id values"
+
                 )
         }
 )

@@ -71,11 +71,13 @@ import java.util.concurrent.ConcurrentMap;
         description = "A sliding time window that holds latest unique events"
                 + " according to the given unique key parameter "
                 + " that have arrived during the last window time period"
-                + " and gets updated for each event arrival and expiry." ,
+                + " and gets updated for each event arrival and expiry."
+                + " When a new event arrives with a key which already in the window,"
+                + " then the previous event is expired and new event is kept within the window." ,
 
         parameters = {
                 @Parameter(name = "unique.key",
-                        description = "The attribute that should be checked for uniqueness.",
+                        description = "The attribute that should be checked for uniqueness. ",
                         type = {DataType.INT, DataType.LONG, DataType.TIME,
                                 DataType.BOOL, DataType.DOUBLE}),
                 @Parameter(name = "window.time",

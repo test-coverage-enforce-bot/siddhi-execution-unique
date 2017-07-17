@@ -63,7 +63,9 @@ import java.util.Map;
         description = "A batch (tumbling) time window based on external time, "
                 + "that holds latest unique events based on the unique key parameter,"
                 + " that arrived during the last window time period according to the the external time stamp,"
-                + " and gets updated on every window time period." ,
+                + " and gets updated on every window time period."
+                + " When a new event arrives with a key which is already in the window,"
+                + " then the previous event is expired and new event is kept within the window" ,
 
         parameters = {
                 @Parameter(name = "unique.key",
@@ -101,8 +103,7 @@ import java.util.Map;
                         description = "This will hold unique events based on the ip "
                                 + "that arrived from the cseEventStream"
                                 + " in every second according to the external time stamp"
-                                + " and return events to outputStream"
-                                + " when events have arrived or expired."
+                                + " and insert into the outputStream"
                                 + " Also it waits two seconds for the arrival of "
                                 + "a new event before flushing current batch."
                 )

@@ -2,7 +2,7 @@ siddhi-execution-unique
 ======================================
 ---
 ##### New version of Siddhi v4.0.0 is built in Java 8.
-##### Latest Released Version v4.0.0-m4.
+##### Latest Released Version v4.0.0-m18.
 
 This is siddhi-execution-unique extension for siddhi window processor to process unique event streams.
 This extension has implemented different type of unique windows which hold only unique events based on the given unique key parameter and return current events and expired events.
@@ -17,33 +17,9 @@ Features Supported
  - Siddhi Stream should be defined
 
  
-  siddhi:
-  
-     extensions:
-     
-       -extension:
-        name: 'time'
-        namespace: 'unique'
-        properties:
-          xxx
-          
-       -extension:
-        name: 'timebatch'
-        namespace: 'unique'
-        properties:
-          xxxx
- 
  #### Deploying the feature
  Feature can be deploy as a OSGI bundle by putting jar file of component to DAS_HOME/lib directory of DAS 4.0.0 pack. 
- #### Example Siddhi Queries
- ##### UniqueTimeWindowProcessor
-     xxx
-
-#### Documentation 
-
-  * xxx
-  * xxx
-
+ 
 ## How to Contribute
 * Send your bug fixes pull requests to [master branch] (https://github.com/wso2-extensions/siddhi-execution-unique/tree/master) 
 

@@ -67,7 +67,10 @@ import java.util.concurrent.ConcurrentHashMap;
         description = "A sliding length window"
                 + " that holds the latest window length unique events"
                 + " according to the unique key parameter"
-                + " and gets updated for each event arrival and expiry.",
+                + " and gets updated for each event arrival and expiry."
+                + " When a new event arrives with the key which already in the window,"
+                + " then the previous event is expired and new event is kept within the window."
+        ,
         parameters = {
                 @Parameter(name = "unique.key",
                         description = "The attribute that should be checked for uniqueness.",
@@ -82,7 +85,7 @@ import java.util.concurrent.ConcurrentHashMap;
                 syntax = "define stream cseEventStream (symbol string, price float, volume int)\n" +
                         "from cseEventStream#window.unique:length(symbol,10)\n" +
                         "select symbol, price, volume\n" +
-                        "insert all events into outputStram ;" ,
+                        "insert all events into outputStream ;" ,
                 description = "This will hold latest 10 unique events"
                         + " according to the symbol from cseEventStream and "
                         + "return all events to outputStream when event has arrived or expired."

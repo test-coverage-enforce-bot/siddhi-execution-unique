@@ -85,7 +85,9 @@ import java.util.Map;
         namespace = "unique",
         description = "A batch (tumbling) length window that holds latest window length unique events"
                 + " according to the unique key parameter and gets updated "
-                + "on every window length unique events arrived" ,
+                + "on every window length unique events arrived."
+                + " When a new event arrives with the key which already in the window,"
+                + " then the previous event is expired and new event is kept within the window." ,
 
         parameters = {
                 @Parameter(name = "unique.key",
@@ -101,9 +103,9 @@ import java.util.Map;
                         syntax = "define window cseEventWindow (symbol string, price float, volume int) " +
                                 "from cseEventStream#window.unique:lengthBatch(symbol, 10)\n" +
                                 "select symbol, price, volume\n" +
-                                "insert all events into outputStream ;",
+                                "insert expired events into outputStream ;",
                         description = "This will hold latest 10 unique events as a batch from the cseEventWindow"
-                                + " based on symbol and return all events to outputStream."
+                                + " based on symbol and return events to outputStream when event or batch is expired."
                 )
         }
 )

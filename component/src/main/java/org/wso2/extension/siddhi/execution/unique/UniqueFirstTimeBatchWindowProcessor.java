@@ -38,7 +38,9 @@ import java.util.Map;
         namespace = "unique",
         description = "A batch (tumbling) time window that holds first unique events"
                 + " according to the unique key parameter that have arrived during window time period"
-                + " and gets updated for each window time period." ,
+                + " and gets updated for each window time period."
+                + " When a new event arrives with a key which is already in the window,"
+                + " that event is not processed by the window.",
         parameters = {
             @Parameter(name = "unique.key",
                        description = "The attribute that should be checked for uniqueness.",
@@ -63,7 +65,6 @@ import java.util.Map;
                       description = "This will hold first unique events arrived from the cseEventStream"
                       + " in every second based on the symbol" +
                       "as a batch and out put all events to outputStream "
-                       + "when events have arrived or expired."
                       )
                    }
         )

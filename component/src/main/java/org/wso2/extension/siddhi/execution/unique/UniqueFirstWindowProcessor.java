@@ -56,7 +56,9 @@ import static java.util.Collections.singletonMap;
         name = "first",
         namespace = "unique",
         description = "Window that holds only the first unique events that are unique "
-                + "according to the unique key parameter.",
+                + "according to the unique key parameter."
+                + " When a new event arrives with a key which is already in the window,"
+                + " that event is not processed by the window." ,
 
         parameters = {
                 @Parameter(name = "unique.key",

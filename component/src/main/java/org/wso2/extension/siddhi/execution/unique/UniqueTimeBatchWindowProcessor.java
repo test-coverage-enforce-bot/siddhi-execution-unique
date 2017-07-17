@@ -75,7 +75,9 @@ import java.util.Map;
         description = "A batch (tumbling) time window that holds latest unique events"
                 + " according to the unique key parameter,"
                 + " that have arrived during the window time period"
-                + " and gets updated for each window time period." ,
+                + " and gets updated for each window time period."
+                + " When a new event arrives with a key which already in the window,"
+                + " then the previous event is expired and new event is kept within the window." ,
         parameters = {
                 @Parameter(name = "unique.key",
                         description = "The attribute that should be checked for uniqueness.",
@@ -102,7 +104,6 @@ import java.util.Map;
                         description = "This will hold unique events arrived from the cseEventStream"
                                 + " in every second based on the symbol"
                                 + " as a batch and return all events to outputStream "
-                                + " when events have arrived or expired."
                 )
         }
 )
