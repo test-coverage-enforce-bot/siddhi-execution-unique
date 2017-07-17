@@ -51,10 +51,31 @@ import static java.util.Collections.singletonMap;
  * this is Unique Ever Window Processor implementation.
  */
 
-// TBD: Annotation description
-@Extension(name = "ever", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "ever",
+        namespace = "unique",
+        description = "A window that holds latest unique events"
+                + " according to the given unique key parameter",
+
+
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                                DataType.BOOL, DataType.DOUBLE}),
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream LoginEvents (timeStamp long, ip string) ;\n" +
+                                "from LoginEvents#window.unique:ever(ip)\n" +
+                                "select count(ip) as ipCount, ip \n" +
+                                "insert all events into uniqueIps  ;",
+
+                        description = "This will process latest unique events based on ip that arrived from LoginEvent"
+                                + " and return the all events to the outputStream with ip and ipCount."
+                )
+        }
+)
 
 public class UniqueEverWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();

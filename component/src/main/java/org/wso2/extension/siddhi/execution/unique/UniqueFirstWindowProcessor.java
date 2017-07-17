@@ -52,10 +52,39 @@ import static java.util.Collections.singletonMap;
  * class representing unique first window processor implementation.
  */
 
-// TBD: Annotation description
-@Extension(name = "first", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "first",
+        namespace = "unique",
+        description = "Window that holds only the first unique events that are unique "
+                + "according to the unique key parameter.",
+
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                                DataType.BOOL, DataType.DOUBLE}),
+                @Parameter(name = "window.time",
+                        description = "The sliding time period for which the window should hold events.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME}),
+                @Parameter(name = "start.time",
+                        description = "This specifies an offset in milliseconds in order to start the" +
+                                " window at a time different to the standard time.",
+                        defaultValue = "0",
+                        type = {DataType.INT}, optional = true)
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream LoginEvents (timeStamp long, ip string);" +
+                                 "from LoginEvents#window.unique:first(ip)\n" +
+                                 "insert into uniqueIps ;",
+
+                        description = "This will return first unique events that arrived "
+                                + "from the LoginEvents stream based on ip "
+                                + " and insert into uniqueIps stream"
+
+                )
+        }
+)
 
 public class UniqueFirstWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();

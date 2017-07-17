@@ -65,10 +65,36 @@ import java.util.concurrent.ConcurrentMap;
  * class representing unique time window processor implementation.
  */
 
-//TBD: annotation description
-@Extension(name = "time", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "time",
+        namespace = "unique",
+        description = "A sliding time window that holds latest unique events"
+                + " according to the given unique key parameter "
+                + " that have arrived during the last window time period"
+                + " and gets updated for each event arrival and expiry." ,
+
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                                DataType.BOOL, DataType.DOUBLE}),
+                @Parameter(name = "window.time",
+                        description = "The sliding time period for which the window should hold events.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME})
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream cseEventStream (symbol string, price float, volume int)\n" +
+                                 "from cseEventStream#window.unique:time(symbol, 1 sec)\n" +
+                                 "select symbol, price, volume\n" +
+                                 "insert expired events into outputStream ;",
+
+                        description = "This will process latest unique events based on symbol that arrived "
+                                + " within the last second from the cseEventStream and "
+                                + " return the all expired events to the outputStream."
+                )
+        }
+)
 
 public class UniqueTimeWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
 

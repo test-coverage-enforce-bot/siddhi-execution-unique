@@ -80,10 +80,33 @@ import java.util.Map;
  * class representing unique length batch window processor implementation.
  */
 
-// TBD: Annotation description
-@Extension(name = "lengthBatch", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "lengthBatch",
+        namespace = "unique",
+        description = "A batch (tumbling) length window that holds latest window length unique events"
+                + " according to the unique key parameter and gets updated "
+                + "on every window length unique events arrived" ,
+
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                                DataType.BOOL, DataType.DOUBLE}),
+                @Parameter(name = "window.length",
+                        description = "The number of events the window should tumble.",
+                        type = {DataType.INT}),
+        },
+        examples = {
+                @Example(
+                        syntax = "define window cseEventWindow (symbol string, price float, volume int) " +
+                                "from cseEventStream#window.unique:lengthBatch(symbol, 10)\n" +
+                                "select symbol, price, volume\n" +
+                                "insert all events into outputStream ;",
+                        description = "This will hold latest 10 unique events as a batch from the cseEventWindow"
+                                + " based on symbol and return all events to outputStream."
+                )
+        }
+)
 
 public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements FindableProcessor {
 

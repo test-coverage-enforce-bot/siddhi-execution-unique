@@ -69,9 +69,43 @@ import java.util.Map;
  */
 
 //TBD : annotation description
-@Extension(name = "timeBatch", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "timeBatch",
+        namespace = "unique",
+        description = "A batch (tumbling) time window that holds latest unique events"
+                + " according to the unique key parameter,"
+                + " that have arrived during the window time period"
+                + " and gets updated for each window time period." ,
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                                DataType.BOOL, DataType.DOUBLE}),
+
+                @Parameter(name = "window.time",
+                        description = "The sliding time period for which the window should hold events.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME}),
+
+                @Parameter(name = "start.time",
+                        description = "This specifies an offset in milliseconds in order to start the" +
+                                " window at a time different to the standard time.",
+                        defaultValue = "0",
+                        type = {DataType.INT}, optional = true)
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream cseEventStream (symbol string, price float, volume int)\n" +
+                                "from cseEventStream#window.unique:time(symbol, 1 sec)\n" +
+                                "select symbol, price, volume\n" +
+                                "insert all events into outputStream ;",
+
+                        description = "This will hold unique events arrived from the cseEventStream"
+                                + " in every second based on the symbol"
+                                + " as a batch and return all events to outputStream "
+                                + " when events have arrived or expired."
+                )
+        }
+)
 
 public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
 

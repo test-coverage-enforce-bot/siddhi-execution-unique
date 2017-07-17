@@ -61,10 +61,33 @@ import java.util.concurrent.ConcurrentHashMap;
  * class representing unique length window processor implementation.
  */
 
-//TBD:annotation description
-@Extension(name = "length", namespace = "unique", description = "TODO", parameters = {
-        @Parameter(name = "parameter", description = "TODO", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TODO", description = "TODO"))
+@Extension(
+        name = "length",
+        namespace = "unique",
+        description = "A sliding length window"
+                + " that holds the latest window length unique events"
+                + " according to the unique key parameter"
+                + " and gets updated for each event arrival and expiry.",
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                                DataType.BOOL, DataType.DOUBLE}),
+                @Parameter(name = "window.length",
+                        description = "The number of events that should be "
+                                + "included in a sliding length window.",
+                        type = {DataType.INT})
+        },
+        examples = @Example(
+                syntax = "define stream cseEventStream (symbol string, price float, volume int)\n" +
+                        "from cseEventStream#window.unique:length(symbol,10)\n" +
+                        "select symbol, price, volume\n" +
+                        "insert all events into outputStram ;" ,
+                description = "This will hold latest 10 unique events"
+                        + " according to the symbol from cseEventStream and "
+                        + "return all events to outputStream when event has arrived or expired."
+        )
+)
 
 public class UniqueLengthWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentHashMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
