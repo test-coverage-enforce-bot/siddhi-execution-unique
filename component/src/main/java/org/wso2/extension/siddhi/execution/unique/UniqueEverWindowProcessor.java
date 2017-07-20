@@ -48,23 +48,23 @@ import java.util.concurrent.ConcurrentMap;
 import static java.util.Collections.singletonMap;
 
 /**
- * this is Unique Ever Window Processor implementation.
+ * This is Unique Ever Window Processor implementation.
  */
 
 @Extension(
         name = "ever",
         namespace = "unique",
-        description = "A window that holds latest unique events"
-                + " according to the given unique key parameter."
-                + " When a new event arrives with a key which is already in the window,"
-                + " then the previous event is expired and new event is kept within the window.",
+        description = "This is a  window that is updated with the latest events based on a unique key parameter."
+                + " When a new event that arrives, has the same value for the unique key parameter"
+                + " as an existing event, the existing event expires, "
+                + "and it is replaced by the later event.",
 
 
         parameters = {
                 @Parameter(name = "unique.key",
                         description = "The attribute that should be checked for uniqueness."
-                                + " if there are more than one parameter to check for uniqueness,"
-                                + " it can be specified as an array by comma separation",
+                               + "If multiple attributes need to be checked, you can specify them "
+                                + "as a comma-separated list.",
                         type = {DataType.INT, DataType.LONG, DataType.TIME,
                                 DataType.BOOL, DataType.DOUBLE}),
         },
@@ -73,23 +73,29 @@ import static java.util.Collections.singletonMap;
                         syntax = "define stream LoginEvents (timeStamp long, ip string) ;\n" +
                                 "from LoginEvents#window.unique:ever(ip)\n" +
                                 "select count(ip) as ipCount, ip \n" +
-                                "insert all events into uniqueIps  ;",
+                                "insert all events into UniqueIps  ;",
 
-                        description = "This will process latest unique events based on ip that arrived from LoginEvent"
-                                + " and return the all events to the outputStream with ip and ipCount."
-
+                        description = "The above query determines the latest events arrived "
+                                + "from the LoginEvents stream based on the ip attribute. "
+                                + "At a given time, all the events held in the window should have a unique value "
+                                + "for the ip attribute. All the processed events are directed "
+                                + "to the UniqueIps output stream with ip and ipCount attributes."
 
                 ),
                 @Example(
                         syntax = "define stream LoginEvents (timeStamp long, ip string , id string) ;\n" +
                                 "from LoginEvents#window.unique:ever(ip, id)\n" +
                                 "select count(ip) as ipCount, ip , id \n" +
-                                "insert expired events into uniqueIps  ;",
+                                "insert expired events into UniqueIps  ;",
 
-                        description = "This will process latest unique events based on ip that arrived from LoginEvent"
-                                + " and return expire events to the outputStream with ip , id and ipCount."
-                                + " A event in the window is expired"
-                                + " when a new event arrive with the same ip and id values"
+                        description = "This query determines the latest events to be included in the window "
+                                + "based on the ip and id attributes. When the LoginEvents event stream receives"
+                                + " a new event of which the combination of values for the ip and id attributes "
+                                + "matches that of an existing event in the window, the existing event expires"
+                                + " and it is replaced with the new event. The expired events "
+                                + "(which may have expired with the batch or"
+                                + " as a result of being replaced by a newer event)"
+                                + " are directed to the uniqueIps output stream."
 
                 )
         }

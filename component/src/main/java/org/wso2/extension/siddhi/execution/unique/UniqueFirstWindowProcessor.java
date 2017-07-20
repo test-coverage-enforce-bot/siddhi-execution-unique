@@ -55,34 +55,28 @@ import static java.util.Collections.singletonMap;
 @Extension(
         name = "first",
         namespace = "unique",
-        description = "Window that holds only the first unique events that are unique "
-                + "according to the unique key parameter."
-                + " When a new event arrives with a key which is already in the window,"
+        description = "This is a window that holds only the first unique events"
+                + " that are unique according to the unique key parameter."
+                + " When a new event arrives with a key that is already in the window,"
                 + " that event is not processed by the window." ,
 
         parameters = {
                 @Parameter(name = "unique.key",
-                        description = "The attribute that should be checked for uniqueness.",
+                        description = "The attribute that should be checked for uniqueness."
+                                + " If there are more than one parameter to check for uniqueness,"
+                                + " it can be specified as an array by comma separation",
                         type = {DataType.INT, DataType.LONG, DataType.TIME,
                                 DataType.BOOL, DataType.DOUBLE}),
-                @Parameter(name = "window.time",
-                        description = "The sliding time period for which the window should hold events.",
-                        type = {DataType.INT, DataType.LONG, DataType.TIME}),
-                @Parameter(name = "start.time",
-                        description = "This specifies an offset in milliseconds in order to start the" +
-                                " window at a time different to the standard time.",
-                        defaultValue = "0",
-                        type = {DataType.INT}, optional = true)
         },
         examples = {
                 @Example(
                         syntax = "define stream LoginEvents (timeStamp long, ip string);" +
                                  "from LoginEvents#window.unique:first(ip)\n" +
-                                 "insert into uniqueIps ;",
+                                 "insert into UniqueIps ;",
 
-                        description = "This will return first unique events that arrived "
-                                + "from the LoginEvents stream based on ip "
-                                + " and insert into uniqueIps stream"
+                        description = "This returns the first unique items that arrive from the LoginEvents stream,"
+                                + " and inserts them into the UniqueIps stream."
+                                + " The unique events those with a unique value for the ip attribute."
 
                 )
         }

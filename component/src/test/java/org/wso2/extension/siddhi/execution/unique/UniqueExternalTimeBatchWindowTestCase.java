@@ -32,7 +32,7 @@ import org.wso2.siddhi.core.util.SiddhiTestHelper;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @since Dec 23, 2015
+ * class representing UniqueExternalTimeBatchWindowTestCase.
  */
 public class UniqueExternalTimeBatchWindowTestCase {
 

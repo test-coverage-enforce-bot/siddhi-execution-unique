@@ -28,16 +28,17 @@ import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
 import java.util.Map;
 
 /**
- *  class representing unique first length batch window processor implementation.
+ *  Class representing unique first length batch window processor implementation.
  */
 
 @Extension(
         name = "firstLengthBatch",
         namespace = "unique",
-        description = "A batch (tumbling) length window that holds window length unique events which arrive first"
-                + " according to the unique key parameter and gets updated"
-                + " on every window length unique events have arrived."
-                + " When a new event arrives with a key which is already in the window,"
+        description = "This is a batch (tumbling) window that holds a specific number of unique events"
+                + " (depending on which events arrive first). The unique events are selected based"
+                + " on a specific parameter that is considered as the unique key."
+                + " When a new event arrives with a value for the unique key parameter"
+                + " that matches the same of an existing event in the window,"
                 + " that event is not processed by the window." ,
 
         parameters = {
@@ -51,12 +52,15 @@ import java.util.Map;
         },
         examples = {
                 @Example(
-                        syntax = "define window cseEventWindow (symbol string, price float, volume int) " +
-                                "from cseEventStream#window.unique:firstLengthBatch(symbol, 10)\n" +
+                        syntax = "define window CseEventWindow (symbol string, price float, volume int) " +
+                                "from CseEventStream#window.unique:firstLengthBatch(symbol, 10)\n" +
                                 "select symbol, price, volume\n" +
-                                "insert all events into outputStream ;",
-                        description = "This will hold first 10 unique events as a batch from the cseEventWindow"
-                                + " based on symbol and return all events to outputStream."
+                                "insert all events into OutputStream ;",
+                        description = "The window in this configuration holds the first unique events"
+                                + " from the CseEventStream steam every second, and"
+                                + " outputs them all into the the OutputStream stream."
+                                + " All the events in a window during a given second should"
+                                + " have a unique value for the symbol attribute."
                 )
         }
 )

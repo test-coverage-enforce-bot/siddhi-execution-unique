@@ -28,10 +28,8 @@ import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
 import java.util.Map;
 
 /**
- *  class representing unique first time batch Window processor implementation.
+ *  Class representing unique first time batch Window processor implementation.
  */
-
-// TBD: Annotation description
 
 @Extension(
         name = "firstTimeBatch",
@@ -48,19 +46,19 @@ import java.util.Map;
                                DataType.BOOL, DataType.DOUBLE}),
             @Parameter(name = "window.time",
                        description = "The sliding time period for which the window should hold events.",
-                       type = {DataType.INT, DataType.LONG, DataType.TIME}),
+                       type = {DataType.INT, DataType.LONG}),
             @Parameter(name = "start.time",
                        description = "This specifies an offset in milliseconds in order to start the " +
                         "window at a time different to the standard time.",
                        defaultValue = "0",
-                       type = {DataType.INT}, optional = true)
+                       type = {DataType.INT , DataType.LONG}, optional = true)
                        },
         examples = {
             @Example(
-                      syntax = "define stream cseEventStream (symbol string, price float, volume int)\n" +
-                               "from cseEventStream#window.unique:firstTimeBatch(symbol,1 sec)\n " +
+                      syntax = "define stream CseEventStream (symbol string, price float, volume int)\n" +
+                               "from CseEventStream#window.unique:firstTimeBatch(symbol,1 sec)\n " +
                                "select symbol, price, volume\n" +
-                               "insert all events into outputStream ;",
+                               "insert all events into OutputStream ;",
 
                       description = "This will hold first unique events arrived from the cseEventStream"
                       + " in every second based on the symbol" +

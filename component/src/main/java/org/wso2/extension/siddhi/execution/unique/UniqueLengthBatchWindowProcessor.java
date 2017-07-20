@@ -49,33 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
- * UniqueLengthBatch Window
- * Sample Query:
- * from inputStream#window.unique:lengthBatch(attribute1,3,true)
- * select attribute1, attribute2
- * insert into outputStream;
- *
- * Description:
- * The behavior of this window is similar to that of length-batch-window in Siddhi,
- * except that this window keeps only "unique" events in the window.
- * The window will drop any duplicate events.
- * We call two events are "not unique" if a certain attribute
- * (e.g. attribute1 in the sample query given) bares equal values in both the events.
- *
- * In the given example query, 3 is the length of the window.
- * attribute1 is the attribute which is checked for uniqueness.
- * Third boolean parameter (which is optional - defaults to false, if not provided),
- * being set to 'true', indicates that this is a "first-unique" window.
- * When a duplicate event arrives, "first-unique" window keeps the first event that came in
- * and drops the event which came later.
- * If the third parameter is set to 'false', then the window is a "last-unique" window;
- * meaning, when a duplicate event arrives,
- * the last-unique window keeps the event which came later and drops the event which came before.
- *
- * @since 1.0.0
- */
-
 /**
  * class representing unique length batch window processor implementation.
  */
@@ -83,11 +56,13 @@ import java.util.Map;
 @Extension(
         name = "lengthBatch",
         namespace = "unique",
-        description = "A batch (tumbling) length window that holds latest window length unique events"
-                + " according to the unique key parameter and gets updated "
-                + "on every window length unique events arrived."
-                + " When a new event arrives with the key which already in the window,"
-                + " then the previous event is expired and new event is kept within the window." ,
+        description = "This is a batch (tumbling) window that holds a specified number of latest unique events."
+                + " The unique events are determined based on the value for a specified unique key parameter."
+                + " The window is updated for every window length"
+                + " (i.e., for the last set of events of the specified number in a tumbling manner)."
+                + " When a new event that arrives within the a window length has the same value"
+                + " for the unique key parameter as an existing event is the window,"
+                + " the previous event is replaced by the new event." ,
 
         parameters = {
                 @Parameter(name = "unique.key",
@@ -100,12 +75,18 @@ import java.util.Map;
         },
         examples = {
                 @Example(
-                        syntax = "define window cseEventWindow (symbol string, price float, volume int) " +
-                                "from cseEventStream#window.unique:lengthBatch(symbol, 10)\n" +
+                        syntax = "define window CseEventWindow (symbol string, price float, volume int) " +
+                                "from CseEventStream#window.unique:lengthBatch(symbol, 10)\n" +
                                 "select symbol, price, volume\n" +
-                                "insert expired events into outputStream ;",
-                        description = "This will hold latest 10 unique events as a batch from the cseEventWindow"
-                                + " based on symbol and return events to outputStream when event or batch is expired."
+                                "insert expired events into OutputStream ;",
+                        description = "In this query, the window at any give time holds"
+                                + " the last 10 unique events from the CseEventStream stream."
+                                + " Each of the 10 events within the window at a given time has"
+                                + " a unique value for the symbol attribute. If a new event has the same value"
+                                + " for the symbol attribute as an existing event within the window length,"
+                                + " the existing event expires and it is replaced by the new event."
+                                + " The query returns expired individual events as well as expired batches"
+                                + " of events to the OutputStream stream."
                 )
         }
 )
