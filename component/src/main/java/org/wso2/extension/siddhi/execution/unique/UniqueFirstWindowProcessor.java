@@ -70,7 +70,7 @@ import static java.util.Collections.singletonMap;
         },
         examples = {
                 @Example(
-                        syntax = "define stream LoginEvents (timeStamp long, ip string);" +
+                        syntax = "define stream LoginEvents (timeStamp long, ip string);\n" +
                                  "from LoginEvents#window.unique:first(ip)\n" +
                                  "insert into UniqueIps ;",
 
