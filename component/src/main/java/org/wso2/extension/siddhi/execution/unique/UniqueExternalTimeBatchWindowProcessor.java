@@ -71,7 +71,7 @@ import java.util.Map;
         parameters = {
                 @Parameter(name = "unique.key",
                         description = "The attribute that should be checked for uniqueness.",
-                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
                                 DataType.BOOL, DataType.DOUBLE}),
                 @Parameter(name = "time.stamp",
                         description = " The time which the window determines as current time and will act upon,"

@@ -65,7 +65,7 @@ import static java.util.Collections.singletonMap;
                         description = "The attribute that should be checked for uniqueness."
                                 + " If there are more than one parameter to check for uniqueness,"
                                 + " it can be specified as an array by comma separation",
-                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
                                 DataType.BOOL, DataType.DOUBLE}),
         },
         examples = {

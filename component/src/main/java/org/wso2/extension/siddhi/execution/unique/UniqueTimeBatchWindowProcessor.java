@@ -64,7 +64,7 @@ import java.util.Map;
         parameters = {
                 @Parameter(name = "unique.key",
                         description = "The attribute that should be checked for uniqueness.",
-                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
                                 DataType.BOOL, DataType.DOUBLE}),
 
                 @Parameter(name = "window.time",
@@ -80,7 +80,7 @@ import java.util.Map;
         examples = {
                 @Example(
                         syntax = "define stream CseEventStream (symbol string, price float, volume int)\n" +
-                                "from CseEventStream#window.unique:time(symbol, 1 sec)\n" +
+                                "from CseEventStream#window.unique:timeBatch(symbol, 1 sec)\n" +
                                 "select symbol, price, volume\n" +
                                 "insert all events into OutputStream ;",
 

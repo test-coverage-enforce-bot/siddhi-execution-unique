@@ -65,7 +65,7 @@ import static java.util.Collections.singletonMap;
                         description = "The attribute that should be checked for uniqueness."
                                + "If multiple attributes need to be checked, you can specify them "
                                 + "as a comma-separated list.",
-                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
                                 DataType.BOOL, DataType.DOUBLE}),
         },
         examples = {
@@ -93,8 +93,8 @@ import static java.util.Collections.singletonMap;
                                 + " a new event of which the combination of values for the ip and id attributes "
                                 + "matches that of an existing event in the window, the existing event expires"
                                 + " and it is replaced with the new event. The expired events "
-                                + "(which may have expired with the batch or"
-                                + " as a result of being replaced by a newer event)"
+                                + "which have been expired"
+                                + " as a result of being replaced by a newer event"
                                 + " are directed to the uniqueIps output stream."
 
                 )

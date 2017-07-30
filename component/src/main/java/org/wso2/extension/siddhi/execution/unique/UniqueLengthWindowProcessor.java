@@ -60,7 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
         parameters = {
                 @Parameter(name = "unique.key",
                         description = "The attribute that should be checked for uniqueness.",
-                        type = {DataType.INT, DataType.LONG, DataType.TIME,
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
                                 DataType.BOOL, DataType.DOUBLE}),
                 @Parameter(name = "window.length",
                         description = "The number of events that should be "

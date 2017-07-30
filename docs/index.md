@@ -66,25 +66,42 @@ Features Supported
  
   
      
- #### Prerequisites for using the feature
+ Prerequisites for using the feature
+ ---------------------------------
  - Siddhi Stream should be defined
 
  
- #### Deploying the feature
+ Deploying the feature
+ ---------------------
  Feature can be deploy as a OSGI bundle by putting jar file of component to DAS_HOME/lib directory of DAS 4.0.0 pack. 
  
-## How to Contribute
+ 
+ Example Siddhi Queries
+ ----------------------
+  define stream CseEventStream (symbol string, price float, volume int)   
+  from CseEventStream#window.unique:timeBatch(symbol, 1 sec)  
+  select symbol, price, volume  
+  insert all events into OutputStream ;
+  
+  This window holds the latest unique events that arrive from the CseEventStream at a  given time,
+  and returns all evens to the OutputStream stream. It is updated every  second based on the latest 
+  values for the symbol attribute.
+ 
+ 
+ How to Contribute
+ ----------------
   * Send your bug fixes pull requests to [master branch] 
-  (https://github.  com/wso2-extensions/siddhi-execution-unique/tree/master) 
+  (https://github.com/wso2-extensions/siddhi-execution-unique/tree/master) 
 
-## Contact us 
-Siddhi developers can be contacted via the mailing lists:
+ Contact us 
+ ---------
+  Siddhi developers can be contacted via the mailing lists:
   * Carbon Developers List : dev@wso2.org
   * Carbon Architecture List : architecture@wso2.org
 
-### We welcome your feedback and contribution.
-
-WSO2 Smart Analytics Team.
+ #### We welcome your feedback and contribution.
+ 
+ WSO2 Smart Analytics Team.
 
 
 

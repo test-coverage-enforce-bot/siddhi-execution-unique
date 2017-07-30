@@ -42,7 +42,7 @@ import java.util.Map;
         parameters = {
             @Parameter(name = "unique.key",
                        description = "The attribute that should be checked for uniqueness.",
-                       type = {DataType.INT, DataType.LONG, DataType.TIME,
+                       type = {DataType.INT, DataType.LONG, DataType.FLOAT,
                                DataType.BOOL, DataType.DOUBLE}),
             @Parameter(name = "window.time",
                        description = "The sliding time period for which the window should hold events.",
