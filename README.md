@@ -3,7 +3,7 @@ siddhi-execution-unique
 ---
 |  Branch | Build Status |
 | :------ |:------------ | 
-| master  | [![Build Status](https://wso2.org/jenkins/view/All%20Builds/job/siddhi/job/siddhi-execution-unique/badge/icon)](https://wso2.org/jenkins/view/All%20Builds/job/siddhi/job/siddhi-execution-unique/) |
+| master  | [![Build Status] (https://wso2.org/jenkins/job/siddhi/job/siddhi-execution-unique/badge/icon!|https://wso2.org/jenkins/job/siddhi/job/siddhi-execution-unique/) |
 ---
 ##### New version of Siddhi v4.0.0 is built in Java 8.
 ##### Latest Released Version v4.0.0-m18.
