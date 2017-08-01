@@ -1,11 +1,15 @@
 siddhi-execution-unique
 ======================================
 ---
+|  Branch | Build Status |
+| :------ |:------------ | 
+| master  | [![Build Status](https://wso2.org/jenkins/view/All%20Builds/job/siddhi/job/siddhi-execution-unique/badge/icon)](https://wso2.org/jenkins/view/All%20Builds/job/siddhi/job/siddhi-execution-unique/) |
+---
 ##### New version of Siddhi v4.0.0 is built in Java 8.
 ##### Latest Released Version v4.0.0-m18.
 
 This is siddhi-execution-unique extension for stream processor to process unique event streams.
-This extension has implemented different type of unique windows which hold only unique events based on the given unique key parameter and return current events and expired events.
+This extension has implemented different type of unique windows which hold unique events based on the given unique key parameter and return current events and expired events.
 A window emits current events when a new event arrives and emits expired events when an existing event has expired from a window.
 
 Features Supported
