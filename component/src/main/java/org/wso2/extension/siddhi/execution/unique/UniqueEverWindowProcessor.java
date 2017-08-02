@@ -48,13 +48,58 @@ import java.util.concurrent.ConcurrentMap;
 import static java.util.Collections.singletonMap;
 
 /**
- * this is Unique Ever Window Processor implementation.
+ * This is Unique Ever Window Processor implementation.
  */
 
-// TBD: Annotation description
-@Extension(name = "ever", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "ever",
+        namespace = "unique",
+        description = "This is a  window that is updated with the latest events based on a unique key parameter."
+                + " When a new event that arrives, has the same value for the unique key parameter"
+                + " as an existing event, the existing event expires, "
+                + "and it is replaced by the later event.",
+
+
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness."
+                               + "If multiple attributes need to be checked, you can specify them "
+                                + "as a comma-separated list.",
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
+                                DataType.BOOL, DataType.DOUBLE}),
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream LoginEvents (timeStamp long, ip string) ;\n" +
+                                "from LoginEvents#window.unique:ever(ip)\n" +
+                                "select count(ip) as ipCount, ip \n" +
+                                "insert all events into UniqueIps  ;",
+
+                        description = "The above query determines the latest events arrived "
+                                + "from the LoginEvents stream based on the ip attribute. "
+                                + "At a given time, all the events held in the window should have a unique value "
+                                + "for the ip attribute. All the processed events are directed "
+                                + "to the UniqueIps output stream with ip and ipCount attributes."
+
+                ),
+                @Example(
+                        syntax = "define stream LoginEvents (timeStamp long, ip string , id string) ;\n" +
+                                "from LoginEvents#window.unique:ever(ip, id)\n" +
+                                "select count(ip) as ipCount, ip , id \n" +
+                                "insert expired events into UniqueIps  ;",
+
+                        description = "This query determines the latest events to be included in the window "
+                                + "based on the ip and id attributes. When the LoginEvents event stream receives"
+                                + " a new event of which the combination of values for the ip and id attributes "
+                                + "matches that of an existing event in the window, the existing event expires"
+                                + " and it is replaced with the new event. The expired events "
+                                + "which have been expired"
+                                + " as a result of being replaced by a newer event"
+                                + " are directed to the uniqueIps output stream."
+
+                )
+        }
+)
 
 public class UniqueEverWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();

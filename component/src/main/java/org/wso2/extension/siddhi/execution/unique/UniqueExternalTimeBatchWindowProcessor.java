@@ -56,10 +56,68 @@ import java.util.Map;
  * Class representing Unique External TimeBatch Window Processor Implementation.
  */
 
-// TBD: Annotation description
-@Extension(name = "externalTimeBatch", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+
+@Extension(
+        name = "externalTimeBatch",
+        namespace = "unique",
+        description = "This is a batch (tumbling) time window that is determined based on external time"
+                + " (i.e., time stamps specified via an attribute in the events)."
+                + " It holds the latest unique events that arrived during the last window time period."
+                + " The unique events are determined based on the value for a specified unique key parameter."
+                + " When a new event arrives within the time window with a value for the unique key parameter"
+                + " that is the same as that of an existing event in the window,"
+                + " the existing event expires and it is replaced by the later event." ,
+
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
+                                DataType.BOOL, DataType.DOUBLE}),
+                @Parameter(name = "time.stamp",
+                        description = " The time which the window determines as current time and will act upon,"
+                                + " the value of this parameter should be monotonically increasing.",
+                        type = { DataType.LONG}),
+                @Parameter(name = "window.time",
+                        description = "The sliding time period for which the window should hold events.",
+                        type = {DataType.INT, DataType.LONG}),
+                @Parameter(name = "start.time",
+                        description = "This specifies an offset in milliseconds in order to start the" +
+                                " window at a time different to the standard time.",
+                        defaultValue = "0",
+                        type = {DataType.INT}, optional = true),
+                @Parameter(name = "time.out",
+                        description = "Time to wait for arrival of new event, before flushing " +
+                                "and giving output for events belonging to a specific batch. If timeout is " +
+                                "not provided, system waits till an event from next batch arrives to " +
+                                "flush current batch.",
+                        type = {DataType.INT, DataType.LONG},
+                        optional = true,
+                        defaultValue = "0") ,
+                @Parameter(name = "replace.time.stamp.with.batch.end.time",
+                        description = "Replaces the time stamp value (That is pointed by the 2nd parameter) "
+                                + "with the corresponding batch end time stamp." ,
+                        type = {DataType.INT, DataType.LONG},
+                        optional = true,
+                        defaultValue = "0")
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream LoginEvents (timestamp long, ip string) ;\n" +
+                                "from LoginEvents#window.unique:externalTimeBatch(ip, timestamp, 1 sec, 0, 2 sec) \n" +
+                                "select timestamp, ip, count() as total\n" +
+                                "insert into UniqueIps ;",
+
+                        description = "In this query, the window holds the latest unique events"
+                                + " that arrive from the LoginEvent stream during each second."
+                                + " The latest events are determined based on the external time stamp."
+                                + " At a given time, all the events held in the window has a unique"
+                                + " values for the ip and monotonically increasing values for timestamp attributes."
+                                + " The events in the window are inserted into the UniqueIps output stream."
+                                + " The system waits for 2 seconds"
+                                + " for the arrival of a new event before flushing the current batch."
+                )
+        }
+)
 
 public class UniqueExternalTimeBatchWindowProcessor extends WindowProcessor
         implements SchedulingProcessor, FindableProcessor {

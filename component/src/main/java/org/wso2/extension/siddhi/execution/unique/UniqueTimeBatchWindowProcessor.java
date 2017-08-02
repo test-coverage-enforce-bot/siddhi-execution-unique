@@ -49,29 +49,47 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
- * UniqueTimeBatch window
- * Sample Query:
- * from inputStream#window.unique:timeBatch(attribute,3 sec)
- * select attribute1, attribute2
- * insert into outputStream;
- *
- * Description:
- * In the example query given, 3 is the duration of the window and attribute is the unique attribute.
- * According to the given attribute it will give unique events within each given time batch.
- * attribute true is to keep first unique default value is last unique.
- *
- * @since 1.0.0
- */
-
 /**
  * class representing unique time batch window processor implementation.
  */
 
-//TBD : annotation description
-@Extension(name = "timeBatch", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "timeBatch",
+        namespace = "unique",
+        description = "This is a batch (tumbling) time window that is updated "
+                + "with the latest events based on a unique key parameter."
+                + " If a new event that arrives within the window time period "
+                + "has a value for the key parameter which matches that of an existing event, "
+                + "the existing event expires and it is replaced by the later event. ",
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
+                                DataType.BOOL, DataType.DOUBLE}),
+
+                @Parameter(name = "window.time",
+                        description = "The sliding time period for which the window should hold events.",
+                        type = {DataType.INT, DataType.LONG }),
+
+                @Parameter(name = "start.time",
+                        description = "This specifies an offset in milliseconds in order to start the" +
+                                " window at a time different to the standard time.",
+                        defaultValue = "0",
+                        type = {DataType.INT , DataType.LONG }, optional = true)
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream CseEventStream (symbol string, price float, volume int)\n" +
+                                "from CseEventStream#window.unique:timeBatch(symbol, 1 sec)\n" +
+                                "select symbol, price, volume\n" +
+                                "insert all events into OutputStream ;",
+
+                        description = "This window holds the latest unique events that arrive from the CseEventStream"
+                                + " at a given time, and returns all evens to the OutputStream stream. "
+                                + "It is updated every second based on the latest values for the symbol attribute."
+                )
+        }
+)
 
 public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
 

@@ -46,25 +46,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/*
-* Sample Query:
-* from inputStream#window.unique:length(attribute1,3)
-* select attribute1, attribute2
-* insert into outputStream;
-*
-* Description:
-* In the example query given, 3 is the length of the window and attribute1 is the unique attribute.
-* According to the given attribute it will give unique events within given length.
-* */
-
 /**
  * class representing unique length window processor implementation.
  */
 
-//TBD:annotation description
-@Extension(name = "length", namespace = "unique", description = "TODO", parameters = {
-        @Parameter(name = "parameter", description = "TODO", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TODO", description = "TODO"))
+@Extension(
+        name = "length",
+        namespace = "unique",
+        description = "This is a sliding length window that holds the latest window length unique events"
+                + " according to the unique key parameter and gets updated for each event arrival and expiry."
+                + " When a new event arrives with the key that is already there in the window, "
+                + "then the previous event is expired and new event is kept within the window.",
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness.",
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
+                                DataType.BOOL, DataType.DOUBLE}),
+                @Parameter(name = "window.length",
+                        description = "The number of events that should be "
+                                + "included in a sliding length window.",
+                        type = {DataType.INT})
+        },
+        examples = @Example(
+                syntax = "define stream CseEventStream (symbol string, price float, volume int)\n" +
+                        "from CseEventStream#window.unique:length(symbol,10)\n" +
+                        "select symbol, price, volume\n" +
+                        "insert all events into OutputStream ;" ,
+
+                description = "In this configuration, the window holds the latest 10 unique events."
+                        + " The latest events are selected based on the symbol attribute. "
+                        + "When the CseEventStream receives an event of which the value for the symbol attribute "
+                        + "is the same as that of an existing event in the window,"
+                        + " the existing event is replaced by the new event. "
+                        + "All the events are returned to the OutputStream event stream "
+                        + "once an event is expired or added to the window."
+        )
+)
 
 public class UniqueLengthWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentHashMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();

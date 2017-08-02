@@ -28,23 +28,44 @@ import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
 import java.util.Map;
 
 /**
- *  class representing unique first time batch Window processor implementation.
+ *  Class representing unique first time batch Window processor implementation.
  */
 
-// TBD: Annotation description
 @Extension(
         name = "firstTimeBatch",
         namespace = "unique",
-        description = "TBD",
+        description = "A batch (tumbling) time window that holds first unique events"
+                + " according to the unique key parameter that have arrived during window time period"
+                + " and gets updated for each window time period."
+                + " When a new event arrives with a key which is already in the window,"
+                + " that event is not processed by the window.",
         parameters = {
-                @Parameter(name = "parameter",
-                        description = "TBD",
-                        type = { DataType.STRING})
-        },
-        examples = @Example(
-                syntax = "TBD",
-                description = "TBD")
-)
+            @Parameter(name = "unique.key",
+                       description = "The attribute that should be checked for uniqueness.",
+                       type = {DataType.INT, DataType.LONG, DataType.FLOAT,
+                               DataType.BOOL, DataType.DOUBLE}),
+            @Parameter(name = "window.time",
+                       description = "The sliding time period for which the window should hold events.",
+                       type = {DataType.INT, DataType.LONG}),
+            @Parameter(name = "start.time",
+                       description = "This specifies an offset in milliseconds in order to start the " +
+                        "window at a time different to the standard time.",
+                       defaultValue = "0",
+                       type = {DataType.INT , DataType.LONG}, optional = true)
+                       },
+        examples = {
+            @Example(
+                      syntax = "define stream CseEventStream (symbol string, price float, volume int)\n" +
+                               "from CseEventStream#window.unique:firstTimeBatch(symbol,1 sec)\n " +
+                               "select symbol, price, volume\n" +
+                               "insert all events into OutputStream ;",
+
+                      description = "This will hold first unique events arrived from the cseEventStream"
+                      + " in every second based on the symbol" +
+                      "as a batch and out put all events to outputStream "
+                      )
+                   }
+        )
 
 public class UniqueFirstTimeBatchWindowProcessor extends UniqueTimeBatchWindowProcessor {
     @Override protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap,

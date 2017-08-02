@@ -50,25 +50,47 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/*
-* Sample Query:
-* from inputStream#window.unique:time(attribute1,3 sec)
-* select attribute1, attribute2
-* insert into outputStream;
-*
-* Description:
-* In the example query given, 3 is the duration of the window and attribute1 is the unique attribute.
-* According to the given attribute it will give unique events within given time.
-* */
-
 /**
- * class representing unique time window processor implementation.
+ * The class representing unique time window processor implementation.
  */
 
-//TBD: annotation description
-@Extension(name = "time", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "time",
+        namespace = "unique",
+        description = "This is a sliding time window that holds the latest unique events"
+                + " that arrived during the last window time period. The unique events are determined"
+                + " based on the value for a specified unique key parameter."
+                + " The window is updated with each event arrival and expiry."
+                + " When a new event that arrives within a window time period"
+                + " has the same value for the unique key parameter as an existing event in the window,"
+                + " the previous event is replaced by the later event." ,
+
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness. ",
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
+                                DataType.BOOL, DataType.DOUBLE}),
+                @Parameter(name = "window.time",
+                        description = "The sliding time period for which the window should hold events.",
+                        type = {DataType.INT, DataType.LONG, })
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream CseEventStream (symbol string, price float, volume int)\n" +
+                                 "from CseEventStream#window.unique:time(symbol, 1 sec)\n" +
+                                 "select symbol, price, volume\n" +
+                                 "insert expired events into OutputStream ;",
+
+                        description = "In this query, the window holds the latest unique events"
+                                + " that arrived within the last second from the CseEventStream,"
+                                + " and returns the expired events to the OutputStream stream."
+                                + " During any given second, each event in the window should have"
+                                + " a unique value for the symbol attribute. If a new event that arrives"
+                                + " within the same second has the same value for the symbol attribute"
+                                + " as an existing event in the window, the existing event expires."
+                )
+        }
+)
 
 public class UniqueTimeWindowProcessor extends WindowProcessor implements SchedulingProcessor, FindableProcessor {
 

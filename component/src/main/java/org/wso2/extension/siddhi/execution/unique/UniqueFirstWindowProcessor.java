@@ -52,10 +52,35 @@ import static java.util.Collections.singletonMap;
  * class representing unique first window processor implementation.
  */
 
-// TBD: Annotation description
-@Extension(name = "first", namespace = "unique", description = "TBD", parameters = {
-        @Parameter(name = "parameter", description = "TBD", type = {
-                DataType.STRING }) }, examples = @Example(syntax = "TBD", description = "TBD"))
+@Extension(
+        name = "first",
+        namespace = "unique",
+        description = "This is a window that holds only the first unique events"
+                + " that are unique according to the unique key parameter."
+                + " When a new event arrives with a key that is already in the window,"
+                + " that event is not processed by the window." ,
+
+        parameters = {
+                @Parameter(name = "unique.key",
+                        description = "The attribute that should be checked for uniqueness."
+                                + " If there are more than one parameter to check for uniqueness,"
+                                + " it can be specified as an array by comma separation",
+                        type = {DataType.INT, DataType.LONG, DataType.FLOAT,
+                                DataType.BOOL, DataType.DOUBLE}),
+        },
+        examples = {
+                @Example(
+                        syntax = "define stream LoginEvents (timeStamp long, ip string);\n" +
+                                 "from LoginEvents#window.unique:first(ip)\n" +
+                                 "insert into UniqueIps ;",
+
+                        description = "This returns the first unique items that arrive from the LoginEvents stream,"
+                                + " and inserts them into the UniqueIps stream."
+                                + " The unique events those with a unique value for the ip attribute."
+
+                )
+        }
+)
 
 public class UniqueFirstWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
