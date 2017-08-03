@@ -6,7 +6,6 @@ Different types of unique windows are available to hold unique events based on t
 A window emits current events when new events arrive, and emits expired events when existing events expire.
 
 **Latest Released Version v4.0.2.** 
----
 
 ## Jenkins Build Status 
 
