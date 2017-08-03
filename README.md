@@ -112,6 +112,6 @@ The following types of windows are supported by this extension. For more informa
 
 ## We welcome your feedback and contribution
 
- *WSO2 Smart Analytics Team.*
+ *WSO2 Stream Processor Team.*
 
 
