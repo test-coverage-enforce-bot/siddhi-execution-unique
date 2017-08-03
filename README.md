@@ -105,7 +105,7 @@ The following types of windows are supported by this extension. For more informa
   * Send your bug fixes pull requests to [master branch](https://github.com/wso2-extensions/siddhi-execution-unique/tree/master) 
 
 ## Contact us 
- *Siddhi developers can be contacted via the mailing lists:*
+ **Siddhi developers can be contacted via the mailing lists:**
  
   * Carbon Developers List : dev@wso2.org
   * Carbon Architecture List : architecture@wso2.org
