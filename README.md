@@ -5,7 +5,7 @@ The **siddhi-execution-unique extension** of WSO2 Stream Processor processes uni
 Different types of unique windows are available to hold unique events based on the given unique key parameter, and return current and expired events.
 A window emits current events when new events arrive, and emits expired events when existing events expire.
 
- Latest Released Version v4.0.2. 
+**Latest Released Version v4.0.2.** 
 ---
 
 ## Jenkins Build Status 
