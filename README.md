@@ -18,7 +18,7 @@ A window emits current events when new events arrive, and emits expired events w
 ---
 
 ## Features Supported
-The following types of windows are supported by this extension. For more information about these windows, see <Link to Siddhi Site, Unique window>
+The following types of windows are supported by this extension. For more information about these windows, see [[Site : Siddhi Execution Unique](https://wso2-extensions.github.io/siddhi-execution-unique/)].
 
 * UniqueEverWindow
   * This window is updated with the latest events based on a unique key parameter. 
@@ -83,7 +83,7 @@ The following types of windows are supported by this extension. For more informa
  
 ## Deploying the feature
  
- This feature can be deployed as an OSGI bundle by placing the jar file of the component in the <DAS_HOME>/lib directory.
+ This feature can be deployed as an OSGI bundle by placing the jar file of the component in the DAS_HOME/lib directory.
  
  
 ## Example Siddhi Queries
@@ -96,8 +96,13 @@ The following types of windows are supported by this extension. For more informa
  * This window holds the latest unique events that arrive from the `CseEventStream` at a  given time,
   and returns all the events to the `OutputStream` stream. It is updated every  second based on the latest 
   values for the symbol attribute.
+  
+ * This extension is used by the Siddhi application deployed in the following sample [[Sample 0013](https://github.com/wso2/product-sp/tree/master/modules/samples/artifacts/0013)] in Wso2 Stream Processor.
  
-
+## Related works
+ * WSO2 Stream Processor [[Product SP](https://docs.wso2.com/display/SP400/)]. 
+ * Siddhi Complex Event Processing Engine [[Siddhi CEP](Siddhi Complex Event Processing Engine)]
+ 
 ## How to Contribute
  
   * Please report issues at [Siddhi Github Issue Tacker](https://github.com/wso2-extensions/siddhi-execution-unique/issues)
@@ -106,7 +111,7 @@ The following types of windows are supported by this extension. For more informa
 ## Contact us 
  **Siddhi developers can be contacted via the mailing lists:**
  
-  * Carbon Developers List : dev@wso2.org
+  * Carbon Developers List   : dev@wso2.org
   * Carbon Architecture List : architecture@wso2.org
 
 ## We welcome your feedback and contribution
