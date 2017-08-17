@@ -1,7 +1,7 @@
 siddhi-execution-unique
 ======================================
 
-The **siddhi-execution-unique extension** is an extension to [Siddhi](https://wso2.github.io/siddhi) to process event streams based on unique events.
+The **siddhi-execution-unique extension** is an extension to [Siddhi](https://wso2.github.io/siddhi) that process event streams based on unique events.
 Different types of unique windows are available to hold unique events based on the given unique key parameter.
 
 * Source code : [https://github.com/wso2-extensions/siddhi-execution-unique](https://github.com/wso2-extensions/siddhi-execution-unique)
@@ -30,8 +30,6 @@ Different types of unique windows are available to hold unique events based on t
 
 
 
-
-
 ## Jenkins Build Status 
 
 ---
@@ -41,8 +39,6 @@ Different types of unique windows are available to hold unique events based on t
 | master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-execution-unique/badge/icon)](https://wso2.org/jenkins/job/siddhi/job/siddhi-execution-unique/) |
 
 ---
-  
-
 ## Features
 
 * <a target="_blank" href="./api/4.0.2-SNAPSHOT/#timebatch-window">timeBatch</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#windows">Window</a>)*<br><div style="padding-left: 1em;"><p>This is a batch (tumbling) time window that is updated with the latest events based on a unique key parameter. If a new event that arrives within the window time period has a value for the key parameter which matches that of an existing event, the existing event expires and it is replaced by the later event. </p></div>
