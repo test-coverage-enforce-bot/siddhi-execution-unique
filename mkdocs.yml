@@ -11,7 +11,7 @@ extra:
     accent: teal
 pages:
 - Welcome to WSO2 Siddhi Execution Unique: index.md
-- Api:
+- API Docs:
   - 4.0.2-SNAPSHOT: api/4.0.2-SNAPSHOT.md
 - License: license.md
 theme: material

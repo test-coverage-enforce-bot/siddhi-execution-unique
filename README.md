@@ -1,12 +1,34 @@
 siddhi-execution-unique
 ======================================
 
-This is siddhi-execution-unique extension for stream processor to process unique event streams.
-This extension has implemented different type of unique windows which hold unique events based on the given unique key parameter and return current events and expired events.
-A window emits current events when a new event arrives and emits expired events when an existing event has expired from a window.
+The **siddhi-execution-unique extension** is an extension to [Siddhi](https://wso2.github.io/siddhi) that process event streams based on unique events.
+Different types of unique windows are available to hold unique events based on the given unique key parameter.
 
- Latest Released Version v4.0.2. 
----
+* Source code : [https://github.com/wso2-extensions/siddhi-execution-unique](https://github.com/wso2-extensions/siddhi-execution-unique)
+* Releases : [https://github.com/wso2-extensions/siddhi-execution-unique/releases](https://github.com/wso2-extensions/siddhi-execution-unique/releases)
+* Issue tracker :  [https://github.com/wso2-extensions/siddhi-execution-unique/issues](https://github.com/wso2-extensions/siddhi-execution-unique/issues)
+
+## How to use 
+
+**Using extension in [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases)**
+
+* You can use the extension with the latest [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases) with editor, debugger and simulation support. 
+
+* Deployed to WSO2 Stream Processor by placing the component [jar](https://github.com/wso2-extensions/siddhi-execution-unique/releases) in STREAM_PROCESSOR_HOME/lib directory.
+
+**Using extension as a [java library](https://wso2.github.io/siddhi/documentation/running-as-a-java-library/)**
+
+* Extension can be added as a maven dependency along with other Siddhi dependencies to your project.
+
+```
+     <depandancy>
+        <groupId>org.wso2.extension.siddhi.execution.unique</groupId>
+        <artifactId>siddhi-execution-unique-parent</artifactId>
+        <version>x.x.x</version>
+     </depandancy>
+```
+
+
 
 ## Jenkins Build Status 
 
@@ -17,100 +39,45 @@ A window emits current events when a new event arrives and emits expired events 
 | master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-execution-unique/badge/icon)](https://wso2.org/jenkins/job/siddhi/job/siddhi-execution-unique/) |
 
 ---
-
-## Features Supported
-
-* UniqueEverWindow
-  * A Window that is updated with the latest events based on a unique key parameter. 
-      When a new event that arrives has the same value for the unique key parameter as an existing event,
-      the existing event expires, and it is replaced by the later event. 
-* UniqueTimeWindowProcessor
-  * A sliding time window that holds the latest unique events that arrived
-     during the last window time period. The unique events are determined based on
-     the value for a specified unique key parameter. The window is updated with each event arrival and expiry.
-     When a new event that arrives within a window time period has the same value
-     for the unique key parameter as an existing event in the window,
-     the previous event is replaced by the later event.
-* UniqueTimeBatchWindowProcessor
-  * Batch (tumbling) time window that is updated with the latest events based
-     on a unique key parameter. If a new event that arrives within the window time period has a value for
-     the key parameter which matches that of an existing event, the existing event expires and
-     it is replaced by the later event. 
-* UniqueLengthWindowProcessor
-  * Sliding length window that holds the latest window length unique events according
-     to the unique key parameter and gets updated for each event arrival and expiry.
-     When a new event arrives with the key that is already there in the window,
-     then the previous event is expired and new event is kept within the window.
-* UniqueLengthBatchWindowProcessor
-  * Batch (tumbling) window that holds a specified number of latest unique events.
-     The unique events are determined based on the value for a specified unique key parameter.
-     The window is updated for every window length (i.e., for the last set of events of
-     the specified number in a tumbling manner). When a new event that arrives
-     within the a window length has the same value for the unique key parameter
-     as an existing event is the window, the previous event is replaced by the new event.
-
-* UniqueFirstWindowProcessor
-  * A window that holds only the first unique events that are unique according to the unique
-     key parameter. When a new event arrives with a key that is already in the window, 
-     that event is not processed by the window.
-
-* UniqueFirstTimeBatchWindow
-  * Batch (tumbling) window that holds the first unique events that
-    arrive during the window time period. The unique events to be held are selected based 
-    on the value for a specified unique key parameter. If a new event arrives with a value for
-    the unique key parameter that is same as that of an existing event in the window,
-    the new event is not processed by the window.
-* UniqueFirstLengthBatchWindowProcessor
-  * Batch (tumbling) window that holds a specific number of unique events
-    (depending on which events arrive first). The unique events are selected based on a specific parameter 
-    that is considered the unique key. When a new event arrives with a value for the unique key parameter 
-    that matches the same of an existing event in the window, that event is not processed by the window.
-* UniqueExternalTimeBatchWindow
-  * Batch (tumbling) time window that is determined based on external time
-     (i.e., time stamps specified via an attribute in the events).
-     It holds the latest unique events that arrived during the last window time period.
-     The unique events are determined based on the value for a specified unique key parameter.
-     When a new event arrives within the time window with a value for the unique key parameter
-     that is the same as that of an existing event in the window,
-     the existing event expires and it is replaced by the later event.
- 
-  
-     
-## Prerequisites for using the feature
- 
- - Siddhi Stream should be defined
-
- 
-## Deploying the feature
- 
- Feature can be deploy as a OSGI bundle by putting jar file of component to DAS_HOME/lib directory of DAS 4.0.0 pack. 
- 
- 
-## Example Siddhi Queries
- 
- * define stream CseEventStream (symbol string, price float, volume int)   
-  from CseEventStream#window.unique:timeBatch(symbol, 1 sec)  
-  select symbol, price, volume  
-  insert all events into OutputStream ;
-  
- * This window holds the latest unique events that arrive from the CseEventStream at a  given time,
-  and returns all evens to the OutputStream stream. It is updated every  second based on the latest 
-  values for the symbol attribute.
- 
-
+## Features
+ * timeBatch (Window)
+   * This is a batch (tumbling) time window that is updated with the latest events based on a unique key parameter. If a new event that arrives within the window time period has a value for the key parameter which matches that of an existing event, the existing event expires and it is replaced by the later event.
+    
+ * ever (Window)
+   * This is a window that is updated with the latest events based on a unique key parameter. When a new event that arrives, has the same value for the unique key parameter as an existing event, the existing event expires, and it is replaced by the later event.
+    
+ * length (Window)
+   * This is a sliding length window that holds the latest window length unique events according to the unique key parameter and gets updated for each event arrival and expiry. When a new event arrives with the key that is already there in the window, then the previous event is expired and new event is kept within the window.
+    
+ * firstLengthBatch (Window)
+   * This is a batch (tumbling) window that holds a specific number of unique events (depending on which events arrive first). The unique events are selected based on a specific parameter that is considered as the unique key. When a new event arrives with a value for the unique key parameter that matches the same of an existing event in the window, that event is not processed by the window.
+    
+ * externalTimeBatch (Window)
+   * This is a batch (tumbling) time window that is determined based on external time (i.e., time stamps specified via an attribute in the events). It holds the latest unique events that arrived during the last window time period. The unique events are determined based on the value for a specified unique key parameter. When a new event arrives within the time window with a value for the unique key parameter that is the same as that of an existing event in the window, the existing event expires and it is replaced by the later event.
+    
+ * firstTimeBatch (Window)
+   * A batch (tumbling) time window that holds first unique events according to the unique key parameter that have arrived during window time period and gets updated for each window time period. When a new event arrives with a key which is already in the window, that event is not processed by the window.
+    
+ * first (Window)
+   * This is a window that holds only the first unique events that are unique according to the unique key parameter. When a new event arrives with a key that is already in the window, that event is not processed by the window.
+    
+ * time (Window)
+   * This is a sliding time window that holds the latest unique events that arrived during the last window time period. The unique events are determined based on the value for a specified unique key parameter. The window is updated with each event arrival and expiry. When a new event that arrives within a window time period has the same value for the unique key parameter as an existing event in the window, the previous event is replaced by the later event.
+    
+ * lengthBatch (Window)
+   * This is a batch (tumbling) window that holds a specified number of latest unique events. The unique events are determined based on the value for a specified unique key parameter. The window is updated for every window length (i.e., for the last set of events of the specified number in a tumbling manner). When a new event that arrives within the a window length has the same value for the unique key parameter as an existing event is the window, the previous event is replaced by the new event.
+   
 ## How to Contribute
  
-  * Please report issues at [Siddhi Github Issue Tacker](https://github.com/wso2-extensions/siddhi-execution-unique/issues)
-  * Send your bug fixes pull requests to [master branch](https://github.com/wso2-extensions/siddhi-execution-unique/tree/master) 
-
+  * Please report issues at [Github Issue Tacker](https://github.com/wso2-extensions/siddhi-execution-unique/issues).
+  * Send your bug fixes pull requests to [master branch](https://github.com/wso2-extensions/siddhi-execution-unique/tree/master). 
+ 
 ## Contact us 
- Siddhi developers can be contacted via the mailing lists:
- -------------------------------------------------------
-  * Carbon Developers List : dev@wso2.org
-  * Carbon Architecture List : architecture@wso2.org
-
-## We welcome your feedback and contribution
-
- *WSO2 Smart Analytics Team.*
-
-
+ * Post your questions on http://stackoverflow.com/ tagging ["siddhi"](http://stackoverflow.com/search?q=siddhi)
+ 
+ * Siddhi developers can be contacted via the mailing lists:
+ 
+    Developers List   : [dev@wso2.org](mailto:dev@wso2.org)
+    
+    Architecture List : [architecture@wso2.org](mailto:architecture@wso2.org)
+ 
