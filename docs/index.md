@@ -1,12 +1,12 @@
 siddhi-execution-unique
 ======================================
 
-The **siddhi-execution-unique extension** is an extension to [Siddhi](https://wso2.github.io/siddhi) that process event streams based on unique events.
+The **siddhi-execution-unique extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> that process event streams based on unique events.
 Different types of unique windows are available to hold unique events based on the given unique key parameter.
 
-* Source code : [https://github.com/wso2-extensions/siddhi-execution-unique](https://github.com/wso2-extensions/siddhi-execution-unique)
-* Releases : [https://github.com/wso2-extensions/siddhi-execution-unique/releases](https://github.com/wso2-extensions/siddhi-execution-unique/releases)
-* Issue tracker :  [https://github.com/wso2-extensions/siddhi-execution-unique/issues](https://github.com/wso2-extensions/siddhi-execution-unique/issues)
+* Source code : <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique">https://github.com/wso2-extensions/siddhi-execution-unique</a>
+* Releases : <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/releases">https://github.com/wso2-extensions/siddhi-execution-unique/releases</a>
+* Issue tracker :  <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/issues">https://github.com/wso2-extensions/siddhi-execution-unique/issues</a>
 
 ## Latest API Docs 
 
@@ -14,13 +14,13 @@ Latest API Docs is <a target="_blank" href="./api/4.0.2-SNAPSHOT">4.0.2-SNAPSHOT
 
 ## How to use 
 
-**Using extension in [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases)**
+**Using extension in <a target="_blank" href="https://github.com/wso2/product-sp">WSO2 Stream Processor</a>**
 
-* You can use the extension with the latest [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases) with editor, debugger and simulation support, which is a part of [WSO2 Analytics](http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17) offering. 
+* You can use this extension in the latest <a target="_blank" href="https://github.com/wso2/product-sp/releases">WSO2 Stream Processor</a> which is a part of <a target="_blank" href="http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">WSO2 Analytics</a> offering, with editor, debugger and simulation support. 
 
-* This extension can be Deployed to WSO2 Stream Processor by placing the component [jar](https://github.com/wso2-extensions/siddhi-execution-unique/releases) in `<STREAM_PROCESSOR_HOME>/lib` directory.
+* This extension can be Deployed to WSO2 Stream Processor by placing the component <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/releases">jar</a> in `<STREAM_PROCESSOR_HOME>/lib` directory.
 
-**Using extension as a [java library](https://wso2.github.io/siddhi/documentation/running-as-a-java-library/)**
+**Using extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
 
 * This extension can be added as a maven dependency along with other Siddhi dependencies to your project.
 
@@ -57,11 +57,11 @@ Latest API Docs is <a target="_blank" href="./api/4.0.2-SNAPSHOT">4.0.2-SNAPSHOT
 
 ## How to Contribute
  
-  * Please report issues at [GitHub Issue Tacker](https://github.com/wso2-extensions/siddhi-execution-unique/issues).
-  * Send your bug fixes pull requests to [master branch](https://github.com/wso2-extensions/siddhi-execution-unique/tree/master). 
+  * Please report issues at <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/issues">GitHub Issue Tacker</a>.
+  * Send your bug fixes pull requests to <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/tree/master">master branch</a>. 
  
 ## Contact us 
- * Post your questions on http://stackoverflow.com/ tagging ["siddhi"](http://stackoverflow.com/search?q=siddhi)
+ * Post your questions on http://stackoverflow.com/ tagging <a target="_blank" href="http://stackoverflow.com/search?q=siddhi">"siddhi"</a>. 
  
  * Siddhi developers can be contacted via the mailing lists:
  
@@ -73,4 +73,4 @@ Latest API Docs is <a target="_blank" href="./api/4.0.2-SNAPSHOT">4.0.2-SNAPSHOT
 
 * We are committed to ensuring that your enterprise deployment is completely supported on production. Our unique approach ensures that all support leverages our open development methodology and is provided by the very same engineers who build the technology. 
 
-* For more details and to take advantage of this unique opportunity contact us via [http://wso2.com/support/](http://wso2.com/support?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17). 
+* For more details and to take advantage of this unique opportunity contact us via <a target="_blank" href="http://wso2.com/support?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">http://wso2.com/support/</a>. 
