@@ -13,9 +13,9 @@ Different types of unique windows are available to hold unique events based on t
 
 ## How to use 
 
-**Using extension in [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases)**
+**Using extension in [WSO2 Stream Processor](https://github.com/wso2/product-sp)**
 
-* You can use the extension with the latest [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases) with editor, debugger and simulation support, which is a part of [WSO2 Analytics](http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17) offering. 
+* You can use this extension in the latest [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases) which is a part of [WSO2 Analytics](http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17) offering, with editor, debugger and simulation support. 
 
 * This extension can be Deployed to WSO2 Stream Processor by placing the component [jar](https://github.com/wso2-extensions/siddhi-execution-unique/releases) in `<STREAM_PROCESSOR_HOME>/lib` directory.
 
