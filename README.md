@@ -15,7 +15,7 @@ Different types of unique windows are available to hold unique events based on t
 
 **Using extension in [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases)**
 
-* You can use the extension with the latest [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases) with editor, debugger and simulation support. 
+* You can use the extension with the latest [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases) with editor, debugger and simulation support, which is a part of [WSO2 Analytics](http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17) offering. 
 
 * This extension can be Deployed to WSO2 Stream Processor by placing the component [jar](https://github.com/wso2-extensions/siddhi-execution-unique/releases) in `<STREAM_PROCESSOR_HOME>/lib` directory.
 
@@ -73,7 +73,7 @@ Different types of unique windows are available to hold unique events based on t
     
 ## How to Contribute
  
-  * Please report issues at [Github Issue Tacker](https://github.com/wso2-extensions/siddhi-execution-unique/issues).
+  * Please report issues at [GitHub Issue Tacker](https://github.com/wso2-extensions/siddhi-execution-unique/issues).
   * Send your bug fixes pull requests to [master branch](https://github.com/wso2-extensions/siddhi-execution-unique/tree/master). 
  
 ## Contact us 
@@ -85,3 +85,8 @@ Different types of unique windows are available to hold unique events based on t
     
     Architecture List : [architecture@wso2.org](mailto:architecture@wso2.org)
  
+## Support 
+
+* We are committed to ensuring that your enterprise deployment is completely supported on production. Our unique approach ensures that all support leverages our open development methodology and is provided by the very same engineers who build the technology. 
+
+* For more details and to take advantage of this unique opportunity contact us via [http://wso2.com/support/](http://wso2.com/support?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17). 
