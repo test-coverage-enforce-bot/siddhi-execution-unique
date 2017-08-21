@@ -24,11 +24,11 @@ Different types of unique windows are available to hold unique events based on t
 * This extension can be added as a maven dependency along with other Siddhi dependencies to your project.
 
 ```
-     <depandancy>
+     <dependency>
         <groupId>org.wso2.extension.siddhi.execution.unique</groupId>
         <artifactId>siddhi-execution-unique-parent</artifactId>
         <version>x.x.x</version>
-     </depandancy>
+     </dependency>
 ```
 
 
