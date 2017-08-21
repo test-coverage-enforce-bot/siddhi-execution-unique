@@ -8,17 +8,21 @@ Different types of unique windows are available to hold unique events based on t
 * Releases : [https://github.com/wso2-extensions/siddhi-execution-unique/releases](https://github.com/wso2-extensions/siddhi-execution-unique/releases)
 * Issue tracker :  [https://github.com/wso2-extensions/siddhi-execution-unique/issues](https://github.com/wso2-extensions/siddhi-execution-unique/issues)
 
+## Latest API Docs 
+
+Latest API Docs is <a target="_blank" href="./api/4.0.2-SNAPSHOT">4.0.2-SNAPSHOT</a>.
+
 ## How to use 
 
 **Using extension in [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases)**
 
 * You can use the extension with the latest [WSO2 Stream Processor](https://github.com/wso2/product-sp/releases) with editor, debugger and simulation support. 
 
-* Deployed to WSO2 Stream Processor by placing the component [jar](https://github.com/wso2-extensions/siddhi-execution-unique/releases) in STREAM_PROCESSOR_HOME/lib directory.
+* This extension can be Deployed to WSO2 Stream Processor by placing the component [jar](https://github.com/wso2-extensions/siddhi-execution-unique/releases) in <STREAM_PROCESSOR_HOME>/lib directory.
 
 **Using extension as a [java library](https://wso2.github.io/siddhi/documentation/running-as-a-java-library/)**
 
-* Extension can be added as a maven dependency along with other Siddhi dependencies to your project.
+* This extension can be added as a maven dependency along with other Siddhi dependencies to your project.
 
 ```
      <depandancy>
