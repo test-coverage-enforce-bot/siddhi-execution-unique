@@ -4,6 +4,8 @@ siddhi-execution-unique
 The **siddhi-execution-unique extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> that processes event streams based on unique events.
 Different types of unique windows are available to hold unique events based on the given unique key parameter.
 
+Find some useful links below:
+
 * <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique">Source code</a>
 * <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/releases">Releases</a>
 * <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/issues">Issue tracker</a>
@@ -57,11 +59,12 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 ## How to Contribute
  
   * Please report issues at <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/issues">GitHub Issue Tracker</a>.
-  * Send your bug fixes pull requests to <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/tree/master">master branch</a>. 
+  
+  * Send your contributions as pull requests to <a target="_blank" href="https://github.com/wso2-extensions/siddhi-execution-unique/tree/master">master branch</a>. 
  
 ## Contact us 
 
- * Post your questions on <a target="_blank" href="http://stackoverflow.com/">Stackoverflow</a> with the tag <a target="_blank" href="http://stackoverflow.com/search?q=siddhi">"siddhi"</a>. 
+ * Post your questions with the <a target="_blank" href="http://stackoverflow.com/search?q=siddhi">"Siddhi"</a> tag in <a target="_blank" href="http://stackoverflow.com/search?q=siddhi">Stackoverflow</a>. 
  
  * Siddhi developers can be contacted via the mailing lists:
  
