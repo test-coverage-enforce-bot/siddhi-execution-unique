@@ -150,21 +150,5 @@
                 </executions>
             </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-            <plugin>
-                <groupId>org.wso2.siddhi</groupId>
-                <artifactId>siddhi-doc-gen</artifactId>
-                <version>${siddhi.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>deploy-mkdocs-github-pages</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
 </project>
