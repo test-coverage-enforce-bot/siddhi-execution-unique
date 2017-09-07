@@ -54,7 +54,6 @@
                             <execution>
                                 <phase>compile</phase>
                                 <goals>
-                                    <goal>generate-md-docs</goal>
                                     <goal>deploy-mkdocs-github-pages</goal>
                                 </goals>
                             </execution>
