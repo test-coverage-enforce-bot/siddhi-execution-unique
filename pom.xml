@@ -61,6 +61,9 @@
                     </plugin>
                 </plugins>
             </build>
+            <modules>
+                <module>component</module>
+            </modules>
         </profile>
     </profiles>
 
@@ -137,18 +140,6 @@
                     <preparationGoals>clean install -Pdocumentation-deploy</preparationGoals>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.wso2.siddhi</groupId>
-                <artifactId>siddhi-doc-gen</artifactId>
-                <version>${siddhi.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate-md-docs</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
