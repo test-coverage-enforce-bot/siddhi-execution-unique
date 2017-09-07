@@ -27,10 +27,14 @@
 
     <groupId>org.wso2.extension.siddhi.execution.unique</groupId>
     <artifactId>siddhi-execution-unique-parent</artifactId>
-    <version>4.0.5-SNAPSHOT</version>
+    <version>4.0.7-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Siddhi Execution Unique Extension Parent</name>
     <url>http://wso2.org</url>
+
+    <modules>
+        <module>component</module>
+    </modules>
 
     <profiles>
         <profile>
@@ -38,9 +42,6 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <modules>
-                <module>component</module>
-            </modules>
         </profile>
         <profile>
             <id>documentation-deploy</id>
@@ -61,9 +62,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <modules>
-                <module>component</module>
-            </modules>
         </profile>
     </profiles>
 
