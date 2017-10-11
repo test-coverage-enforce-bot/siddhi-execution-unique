@@ -20,6 +20,7 @@ package org.wso2.extension.siddhi.execution.unique;
 
 import org.apache.log4j.Logger;
 import org.testng.Assert;
+import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
@@ -29,6 +30,9 @@ import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
+import org.wso2.siddhi.core.util.persistence.InMemoryPersistenceStore;
+import org.wso2.siddhi.core.util.persistence.PersistenceStore;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -41,12 +45,13 @@ public class UniqueEverWindowTestCase {
     private int waitTime = 50;
     private int timeout = 30000;
     private AtomicInteger eventCount;
+    private int lastRemoveValue;
 
     @BeforeMethod public void init() {
         value = 0;
         eventArrived = false;
         eventCount = new AtomicInteger(0);
-
+        lastRemoveValue = 0;
     }
 
     @Test public void uniqueEverWindowTest1() throws InterruptedException {
@@ -132,4 +137,123 @@ public class UniqueEverWindowTestCase {
         siddhiAppRuntime.shutdown();
     }
 
+    @Test
+    public void uniqueEverWindowTest3() throws InterruptedException {
+        log.info("uniqueEverWindowTest3 - unique window query");
+
+        PersistenceStore persistenceStore = new InMemoryPersistenceStore();
+        SiddhiManager siddhiManager = new SiddhiManager();
+        siddhiManager.setPersistenceStore(persistenceStore);
+
+        String executionPlan = "" +
+                "@app:name('Test') " +
+                "" +
+                "define stream StockStream ( symbol string, price float, volume int );" +
+                "" +
+                "@info(name = 'query1')" +
+                "from StockStream[price>10]#window.unique:ever(symbol) " +
+                "select * " +
+                "insert all events into OutStream ";
+
+        QueryCallback queryCallback = new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                eventArrived = true;
+                eventCount.incrementAndGet();
+                for (Event inEvent : inEvents) {
+                    AssertJUnit.assertTrue("IBM".equals(inEvent.getData(0)) || "WSO2".equals(inEvent.getData(0)));
+                }
+
+                if (removeEvents != null) {
+                    for (Event removeEvent : removeEvents) {
+                        lastRemoveValue = (Integer) removeEvent.getData(2);
+                    }
+                }
+            }
+        };
+
+        SiddhiAppRuntime executionPlanRuntime = siddhiManager.createSiddhiAppRuntime(executionPlan);
+        executionPlanRuntime.addCallback("query1", queryCallback);
+
+        InputHandler inputHandler = executionPlanRuntime.getInputHandler("StockStream");
+        executionPlanRuntime.start();
+
+        inputHandler.send(new Object[]{"IBM", 75.6f, 100});
+        inputHandler.send(new Object[]{"WSO2", 75.6f, 100});
+        inputHandler.send(new Object[]{"IBM", 75.6f, 110});
+        AssertJUnit.assertTrue(eventArrived);
+        Thread.sleep(500);
+        AssertJUnit.assertEquals(100, lastRemoveValue);
+
+        //persisting
+        executionPlanRuntime.persist();
+        Thread.sleep(500);
+
+        inputHandler.send(new Object[]{"WSO2", 75.6f, 50});
+        inputHandler.send(new Object[]{"IBM", 75.6f, 50});
+
+        //restarting execution plan
+        Thread.sleep(500);
+        executionPlanRuntime.shutdown();
+        executionPlanRuntime = siddhiManager.createSiddhiAppRuntime(executionPlan);
+        executionPlanRuntime.addCallback("query1", queryCallback);
+        inputHandler = executionPlanRuntime.getInputHandler("StockStream");
+        executionPlanRuntime.start();
+
+        //loading
+        executionPlanRuntime.restoreLastRevision();
+
+        inputHandler.send(new Object[]{"IBM", 75.6f, 100});
+
+        //shutdown execution plan
+        SiddhiTestHelper.waitForEvents(100, 6, eventCount, 10000);
+        AssertJUnit.assertEquals(true, eventArrived);
+        AssertJUnit.assertEquals(110, lastRemoveValue);
+        executionPlanRuntime.shutdown();
+    }
+
+    @Test
+    public void uniqueEverWindowTest4() throws InterruptedException {
+        log.info("uniqueEverWindowTest3");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String streams = "" +
+                "define stream cseEventStream (symbol string, price float, volume int); " +
+                "define stream twitterStream (user string, tweet string, company string); ";
+        String query = "" +
+                "@info(name = 'query1') " +
+                "from cseEventStream#window.unique:ever(symbol) join twitterStream#window.unique:ever(user) " +
+                "on cseEventStream.symbol== twitterStream.company " +
+                "select cseEventStream.symbol as symbol, twitterStream.tweet, cseEventStream.price " +
+                "insert into outputStream ;";
+
+       SiddhiAppRuntime executionPlanRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        try {
+            executionPlanRuntime.addCallback("query1", new QueryCallback() {
+                @Override
+                public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                    EventPrinter.print(timeStamp, inEvents, removeEvents);
+                    eventArrived = true;
+                    if (inEvents != null) {
+                        for (Event inEvent : inEvents) {
+                            eventCount.incrementAndGet();
+                        }
+                    }
+                }
+            });
+            InputHandler cseEventStreamHandler = executionPlanRuntime.getInputHandler("cseEventStream");
+            InputHandler twitterStreamHandler = executionPlanRuntime.getInputHandler("twitterStream");
+            executionPlanRuntime.start();
+            cseEventStreamHandler.send(new Object[]{"WSO2", 55.6f, 100});
+            cseEventStreamHandler.send(new Object[]{"IBM", 59.6f, 100});
+            twitterStreamHandler.send(new Object[]{"User1", "Hello World", "WSO2"});
+            twitterStreamHandler.send(new Object[]{"User2", "Hello World2", "WSO2"});
+            cseEventStreamHandler.send(new Object[]{"WSO2", 75.6f, 100});
+            SiddhiTestHelper.waitForEvents(100, 4, eventCount, 10000);
+            Assert.assertEquals(4, eventCount.get());
+            Assert.assertTrue(eventArrived);
+        } finally {
+            executionPlanRuntime.shutdown();
+        }
+    }
 }
