@@ -15,9 +15,11 @@ google_analytics:
 pages:
 - Welcome to WSO2 Siddhi Execution Unique: index.md
 - API Docs:
+  - Latest (4.0.9): api/latest.md
   - 4.0.9: api/4.0.9.md
   - 4.0.8: api/4.0.8.md
   - 4.0.7: api/4.0.7.md
+  - 4.0.12: api/4.0.12.md
   - 4.0.10: api/4.0.10.md
 - License: license.md
 theme: material
