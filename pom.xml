@@ -43,26 +43,6 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
-        <profile>
-            <id>documentation-deploy</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.wso2.siddhi</groupId>
-                        <artifactId>siddhi-doc-gen</artifactId>
-                        <version>${siddhi.version}</version>
-                        <executions>
-                            <execution>
-                                <phase>compile</phase>
-                                <goals>
-                                    <goal>deploy-mkdocs-github-pages</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
     </profiles>
 
     <properties>
@@ -141,5 +121,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
