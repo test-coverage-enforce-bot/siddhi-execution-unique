@@ -1,6 +1,54 @@
-# API Docs - v4.0.13
+# API Docs - v4.0.14-SNAPSHOT
 
 ## Unique
+
+### ever *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
+
+<p style="word-wrap: break-word">This is a  window that is updated with the latest events based on a unique key parameter. When a new event that arrives, has the same value for the unique key parameter as an existing event, the existing event expires, and it is replaced by the later event.</p>
+
+<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
+```
+unique:ever(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key)
+```
+
+<span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Data Types</th>
+        <th>Optional</th>
+        <th>Dynamic</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">unique.key</td>
+        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness.If multiple attributes need to be checked, you can specify them as a comma-separated list.</td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">INT<br>LONG<br>FLOAT<br>BOOL<br>DOUBLE</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+</table>
+
+<span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
+<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
+```
+define stream LoginEvents (timeStamp long, ip string) ;
+from LoginEvents#window.unique:ever(ip)
+select count(ip) as ipCount, ip 
+insert all events into UniqueIps  ;
+```
+<p style="word-wrap: break-word">The above query determines the latest events arrived from the LoginEvents stream based on the ip attribute. At a given time, all the events held in the window should have a unique value for the ip attribute. All the processed events are directed to the UniqueIps output stream with ip and ipCount attributes.</p>
+
+<span id="example-2" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 2</span>
+```
+define stream LoginEvents (timeStamp long, ip string , id string) ;
+from LoginEvents#window.unique:ever(ip, id)
+select count(ip) as ipCount, ip , id 
+insert expired events into UniqueIps  ;
+```
+<p style="word-wrap: break-word">This query determines the latest events to be included in the window based on the ip and id attributes. When the LoginEvents event stream receives a new event of which the combination of values for the ip and id attributes matches that of an existing event in the window, the existing event expires and it is replaced with the new event. The expired events which have been expired as a result of being replaced by a newer event are directed to the uniqueIps output stream.</p>
 
 ### externalTimeBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
 
@@ -81,99 +129,6 @@ insert into UniqueIps ;
 ```
 <p style="word-wrap: break-word">In this query, the window holds the latest unique events that arrive from the LoginEvent stream during each second. The latest events are determined based on the external time stamp. At a given time, all the events held in the window has a unique values for the ip and monotonically increasing values for timestamp attributes. The events in the window are inserted into the UniqueIps output stream. The system waits for 2 seconds for the arrival of a new event before flushing the current batch.</p>
 
-### timeBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
-
-<p style="word-wrap: break-word">This is a batch (tumbling) time window that is updated with the latest events based on a unique key parameter. If a new event that arrives within the window time period has a value for the key parameter which matches that of an existing event, the existing event expires and it is replaced by the later event. </p>
-
-<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
-```
-unique:timeBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time, <INT|LONG> start.time)
-```
-
-<span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
-<table>
-    <tr>
-        <th>Name</th>
-        <th style="min-width: 20em">Description</th>
-        <th>Default Value</th>
-        <th>Possible Data Types</th>
-        <th>Optional</th>
-        <th>Dynamic</th>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">unique.key</td>
-        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness.</td>
-        <td style="vertical-align: top"></td>
-        <td style="vertical-align: top">INT<br>LONG<br>FLOAT<br>BOOL<br>DOUBLE</td>
-        <td style="vertical-align: top">No</td>
-        <td style="vertical-align: top">No</td>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">window.time</td>
-        <td style="vertical-align: top; word-wrap: break-word">The sliding time period for which the window should hold events.</td>
-        <td style="vertical-align: top"></td>
-        <td style="vertical-align: top">INT<br>LONG</td>
-        <td style="vertical-align: top">No</td>
-        <td style="vertical-align: top">No</td>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">start.time</td>
-        <td style="vertical-align: top; word-wrap: break-word">This specifies an offset in milliseconds in order to start the window at a time different to the standard time.</td>
-        <td style="vertical-align: top">0</td>
-        <td style="vertical-align: top">INT<br>LONG</td>
-        <td style="vertical-align: top">Yes</td>
-        <td style="vertical-align: top">No</td>
-    </tr>
-</table>
-
-<span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
-<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
-```
-define stream CseEventStream (symbol string, price float, volume int)
-from CseEventStream#window.unique:timeBatch(symbol, 1 sec)
-select symbol, price, volume
-insert all events into OutputStream ;
-```
-<p style="word-wrap: break-word">This window holds the latest unique events that arrive from the CseEventStream at a given time, and returns all evens to the OutputStream stream. It is updated every second based on the latest values for the symbol attribute.</p>
-
-### first *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
-
-<p style="word-wrap: break-word">This is a window that holds only the first unique events that are unique according to the unique key parameter. When a new event arrives with a key that is already in the window, that event is not processed by the window.</p>
-
-<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
-```
-unique:first(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key)
-```
-
-<span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
-<table>
-    <tr>
-        <th>Name</th>
-        <th style="min-width: 20em">Description</th>
-        <th>Default Value</th>
-        <th>Possible Data Types</th>
-        <th>Optional</th>
-        <th>Dynamic</th>
-    </tr>
-    <tr>
-        <td style="vertical-align: top">unique.key</td>
-        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness. If there are more than one parameter to check for uniqueness, it can be specified as an array by comma separation</td>
-        <td style="vertical-align: top"></td>
-        <td style="vertical-align: top">INT<br>LONG<br>FLOAT<br>BOOL<br>DOUBLE</td>
-        <td style="vertical-align: top">No</td>
-        <td style="vertical-align: top">No</td>
-    </tr>
-</table>
-
-<span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
-<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
-```
-define stream LoginEvents (timeStamp long, ip string);
-from LoginEvents#window.unique:first(ip)
-insert into UniqueIps ;
-```
-<p style="word-wrap: break-word">This returns the first unique items that arrive from the LoginEvents stream, and inserts them into the UniqueIps stream. The unique events those with a unique value for the ip attribute.</p>
-
 ### firstLengthBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
 
 <p style="word-wrap: break-word">This is a batch (tumbling) window that holds a specific number of unique events (depending on which events arrive first). The unique events are selected based on a specific parameter that is considered as the unique key. When a new event arrives with a value for the unique key parameter that matches the same of an existing event in the window, that event is not processed by the window.</p>
@@ -220,13 +175,13 @@ insert all events into OutputStream ;
 ```
 <p style="word-wrap: break-word">The window in this configuration holds the first unique events from the CseEventStream steam every second, and outputs them all into the the OutputStream stream. All the events in a window during a given second should have a unique value for the symbol attribute.</p>
 
-### time *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
+### firstTimeBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
 
-<p style="word-wrap: break-word">This is a sliding time window that holds the latest unique events that arrived during the last window time period. The unique events are determined based on the value for a specified unique key parameter. The window is updated with each event arrival and expiry. When a new event that arrives within a window time period has the same value for the unique key parameter as an existing event in the window, the previous event is replaced by the later event.</p>
+<p style="word-wrap: break-word">A batch (tumbling) time window that holds first unique events according to the unique key parameter that have arrived during window time period and gets updated for each window time period. When a new event arrives with a key which is already in the window, that event is not processed by the window.</p>
 
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
 ```
-unique:time(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time)
+unique:firstTimeBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time, <INT|LONG> start.time)
 ```
 
 <span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -241,7 +196,7 @@ unique:time(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time)
     </tr>
     <tr>
         <td style="vertical-align: top">unique.key</td>
-        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness. </td>
+        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness.</td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">INT<br>LONG<br>FLOAT<br>BOOL<br>DOUBLE</td>
         <td style="vertical-align: top">No</td>
@@ -255,25 +210,33 @@ unique:time(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time)
         <td style="vertical-align: top">No</td>
         <td style="vertical-align: top">No</td>
     </tr>
+    <tr>
+        <td style="vertical-align: top">start.time</td>
+        <td style="vertical-align: top; word-wrap: break-word">This specifies an offset in milliseconds in order to start the window at a time different to the standard time.</td>
+        <td style="vertical-align: top">0</td>
+        <td style="vertical-align: top">INT<br>LONG</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
 </table>
 
 <span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
 ```
 define stream CseEventStream (symbol string, price float, volume int)
-from CseEventStream#window.unique:time(symbol, 1 sec)
-select symbol, price, volume
-insert expired events into OutputStream ;
+from CseEventStream#window.unique:firstTimeBatch(symbol,1 sec)
+ select symbol, price, volume
+insert all events into OutputStream ;
 ```
-<p style="word-wrap: break-word">In this query, the window holds the latest unique events that arrived within the last second from the CseEventStream, and returns the expired events to the OutputStream stream. During any given second, each event in the window should have a unique value for the symbol attribute. If a new event that arrives within the same second has the same value for the symbol attribute as an existing event in the window, the existing event expires.</p>
+<p style="word-wrap: break-word">This will hold first unique events arrived from the cseEventStream in every second based on the symbolas a batch and out put all events to outputStream </p>
 
-### ever *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
+### first *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
 
-<p style="word-wrap: break-word">This is a  window that is updated with the latest events based on a unique key parameter. When a new event that arrives, has the same value for the unique key parameter as an existing event, the existing event expires, and it is replaced by the later event.</p>
+<p style="word-wrap: break-word">This is a window that holds only the first unique events that are unique according to the unique key parameter. When a new event arrives with a key that is already in the window, that event is not processed by the window.</p>
 
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
 ```
-unique:ever(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key)
+unique:first(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key)
 ```
 
 <span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -288,7 +251,7 @@ unique:ever(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key)
     </tr>
     <tr>
         <td style="vertical-align: top">unique.key</td>
-        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness.If multiple attributes need to be checked, you can specify them as a comma-separated list.</td>
+        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness. If there are more than one parameter to check for uniqueness, it can be specified as an array by comma separation</td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">INT<br>LONG<br>FLOAT<br>BOOL<br>DOUBLE</td>
         <td style="vertical-align: top">No</td>
@@ -299,21 +262,11 @@ unique:ever(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key)
 <span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
 ```
-define stream LoginEvents (timeStamp long, ip string) ;
-from LoginEvents#window.unique:ever(ip)
-select count(ip) as ipCount, ip 
-insert all events into UniqueIps  ;
+define stream LoginEvents (timeStamp long, ip string);
+from LoginEvents#window.unique:first(ip)
+insert into UniqueIps ;
 ```
-<p style="word-wrap: break-word">The above query determines the latest events arrived from the LoginEvents stream based on the ip attribute. At a given time, all the events held in the window should have a unique value for the ip attribute. All the processed events are directed to the UniqueIps output stream with ip and ipCount attributes.</p>
-
-<span id="example-2" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 2</span>
-```
-define stream LoginEvents (timeStamp long, ip string , id string) ;
-from LoginEvents#window.unique:ever(ip, id)
-select count(ip) as ipCount, ip , id 
-insert expired events into UniqueIps  ;
-```
-<p style="word-wrap: break-word">This query determines the latest events to be included in the window based on the ip and id attributes. When the LoginEvents event stream receives a new event of which the combination of values for the ip and id attributes matches that of an existing event in the window, the existing event expires and it is replaced with the new event. The expired events which have been expired as a result of being replaced by a newer event are directed to the uniqueIps output stream.</p>
+<p style="word-wrap: break-word">This returns the first unique items that arrive from the LoginEvents stream, and inserts them into the UniqueIps stream. The unique events those with a unique value for the ip attribute.</p>
 
 ### lengthBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
 
@@ -408,13 +361,13 @@ insert all events into OutputStream ;
 ```
 <p style="word-wrap: break-word">In this configuration, the window holds the latest 10 unique events. The latest events are selected based on the symbol attribute. When the CseEventStream receives an event of which the value for the symbol attribute is the same as that of an existing event in the window, the existing event is replaced by the new event. All the events are returned to the OutputStream event stream once an event is expired or added to the window.</p>
 
-### firstTimeBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
+### timeBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
 
-<p style="word-wrap: break-word">A batch (tumbling) time window that holds first unique events according to the unique key parameter that have arrived during window time period and gets updated for each window time period. When a new event arrives with a key which is already in the window, that event is not processed by the window.</p>
+<p style="word-wrap: break-word">This is a batch (tumbling) time window that is updated with the latest events based on a unique key parameter. If a new event that arrives within the window time period has a value for the key parameter which matches that of an existing event, the existing event expires and it is replaced by the later event. </p>
 
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
 ```
-unique:firstTimeBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time, <INT|LONG> start.time)
+unique:timeBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time, <INT|LONG> start.time)
 ```
 
 <span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
@@ -457,9 +410,56 @@ unique:firstTimeBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
 ```
 define stream CseEventStream (symbol string, price float, volume int)
-from CseEventStream#window.unique:firstTimeBatch(symbol,1 sec)
- select symbol, price, volume
+from CseEventStream#window.unique:timeBatch(symbol, 1 sec)
+select symbol, price, volume
 insert all events into OutputStream ;
 ```
-<p style="word-wrap: break-word">This will hold first unique events arrived from the cseEventStream in every second based on the symbolas a batch and out put all events to outputStream </p>
+<p style="word-wrap: break-word">This window holds the latest unique events that arrive from the CseEventStream at a given time, and returns all evens to the OutputStream stream. It is updated every second based on the latest values for the symbol attribute.</p>
+
+### time *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
+
+<p style="word-wrap: break-word">This is a sliding time window that holds the latest unique events that arrived during the last window time period. The unique events are determined based on the value for a specified unique key parameter. The window is updated with each event arrival and expiry. When a new event that arrives within a window time period has the same value for the unique key parameter as an existing event in the window, the previous event is replaced by the later event.</p>
+
+<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
+```
+unique:time(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time)
+```
+
+<span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Data Types</th>
+        <th>Optional</th>
+        <th>Dynamic</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">unique.key</td>
+        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness. </td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">INT<br>LONG<br>FLOAT<br>BOOL<br>DOUBLE</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">window.time</td>
+        <td style="vertical-align: top; word-wrap: break-word">The sliding time period for which the window should hold events.</td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">INT<br>LONG</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+</table>
+
+<span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
+<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
+```
+define stream CseEventStream (symbol string, price float, volume int)
+from CseEventStream#window.unique:time(symbol, 1 sec)
+select symbol, price, volume
+insert expired events into OutputStream ;
+```
+<p style="word-wrap: break-word">In this query, the window holds the latest unique events that arrived within the last second from the CseEventStream, and returns the expired events to the OutputStream stream. During any given second, each event in the window should have a unique value for the symbol attribute. If a new event that arrives within the same second has the same value for the symbol attribute as an existing event in the window, the existing event expires.</p>
 
