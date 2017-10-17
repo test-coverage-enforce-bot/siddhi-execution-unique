@@ -12,7 +12,7 @@ Find some useful links below:
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-execution-unique/api/4.0.14">4.0.14</a>.
+Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-execution-unique/api/4.0.15">4.0.15</a>.
 
 ## How to use 
 
