@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.wso2.extension.siddhi.execution.unique</groupId>
         <artifactId>siddhi-execution-unique-parent</artifactId>
-        <version>4.0.14-SNAPSHOT</version>
+        <version>4.0.15-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -83,7 +83,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skipTests>false</skipTests>
                     <suiteXmlFiles>
                         <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
