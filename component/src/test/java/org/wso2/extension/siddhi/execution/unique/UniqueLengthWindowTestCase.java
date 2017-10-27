@@ -20,15 +20,19 @@ package org.wso2.extension.siddhi.execution.unique;
 
 import org.apache.log4j.Logger;
 import org.testng.Assert;
+import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
+import org.wso2.siddhi.core.util.persistence.InMemoryPersistenceStore;
+import org.wso2.siddhi.core.util.persistence.PersistenceStore;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -176,6 +180,69 @@ public class UniqueLengthWindowTestCase {
         SiddhiTestHelper.waitForEvents(waitTime, 2, eventCount, timeout);
         Assert.assertEquals(eventArrived, true, "Event arrived");
         Assert.assertEquals(value, 0, "Event max value");
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueLengthWindowTest5() {
+        log.info("Testing uniqueLength window with no of events smaller than window size");
+        final int length = 4;
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "" + "define stream LoginEvents (timeStamp long, a string, ip string);";
+        String query = "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:length(ip) "
+                + "select a, count(ip) as ipCount, ip " + "insert all events into uniqueIps ;";
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test
+    public void uniqueLengthWindowTest6() throws InterruptedException {
+        log.info("Testing uniqueLength window for current state restore state.");
+        final int length = 4;
+
+        PersistenceStore persistenceStore = new InMemoryPersistenceStore();
+        SiddhiManager siddhiManager = new SiddhiManager();
+        siddhiManager.setPersistenceStore(persistenceStore);
+
+        String cseEventStream = "" + "define stream LoginEvents (timeStamp long, a string, ip string);";
+        String query = "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:length(ip," + length + ") "
+                + "select a, count(ip) as ipCount, ip " + "insert all events into uniqueIps ;";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                eventCount.incrementAndGet();
+                if (inEvents != null) {
+                    for (Event event : inEvents) {
+                        if (eventCount.get() == 1) {
+                            AssertJUnit.assertEquals("192.10.1.4", event.getData(2));
+                        } else if (eventCount.get() == 2) {
+                            AssertJUnit.assertEquals("192.10.1.3", event.getData(2));
+                        } else if (eventCount.get() == 3) {
+                            AssertJUnit.assertEquals("192.10.1.3", event.getData(2));
+                        }
+                    }
+                }
+                eventArrived = true;
+            }
+
+        });
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A1", "192.10.1.4" });
+        siddhiAppRuntime.persist();
+        SiddhiTestHelper.waitForEvents(waitTime, 1, eventCount, timeout);
+        //restarting execution plan
+        siddhiAppRuntime.shutdown();
+        inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
+        //loading
+        siddhiAppRuntime.restoreLastRevision();
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A2", "192.10.1.3" });
+        inputHandler.send(new Object[] { System.currentTimeMillis(), "A3", "192.10.1.3" });
+
+        SiddhiTestHelper.waitForEvents(waitTime, 3, eventCount, timeout);
+        AssertJUnit.assertTrue(eventArrived);
         siddhiAppRuntime.shutdown();
     }
 

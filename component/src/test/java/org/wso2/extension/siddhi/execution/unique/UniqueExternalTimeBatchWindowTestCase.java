@@ -24,10 +24,13 @@ import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
+import org.wso2.siddhi.core.util.persistence.InMemoryPersistenceStore;
+import org.wso2.siddhi.core.util.persistence.PersistenceStore;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -978,4 +981,176 @@ public class UniqueExternalTimeBatchWindowTestCase {
         siddhiAppRuntime.shutdown();
     }
 
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueExternalTimeBatchWindowTest16() {
+        log.info("uniqueExternalTimeBatchWindowTest for first parameter should variable case");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
+        String query = "" + "@info(name = 'query1') "
+                + "from LoginEvents#window.unique:externalTimeBatch('uniqueAttribute', timestamp, 1 sec, 0, 2 sec) "
+                + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueExternalTimeBatchWindowTest17() {
+        log.info("uniqueExternalTimeBatchWindowTest for second parameter should variable case ");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
+        String query = "" + "@info(name = 'query1') "
+                + "from LoginEvents#window.unique:externalTimeBatch(ip, 'timestamp', 1 sec, 0, 2 sec) "
+                + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueExternalTimeBatchWindowTest18() {
+        log.info("uniqueExternalTimeBatchWindowTest for second parameter invalid type ");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp string, ip string) ;";
+        String query = "" + "@info(name = 'query1') "
+                + "from LoginEvents#window.unique:externalTimeBatch(ip, timestamp, 1 sec, 0, 2 sec) "
+                + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueExternalTimeBatchWindowTest19() {
+        log.info("uniqueExternalTimeBatchWindowTest for third parameter invalid type ");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
+        String query = "" + "@info(name = 'query1') "
+                + "from LoginEvents#window.unique:externalTimeBatch(ip, timestamp, '1 sec', 0, 2 sec) "
+                + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueExternalTimeBatchWindowTest20() {
+        log.info("uniqueExternalTimeBatchWindowTest for fourth parameter invalid type ");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
+        String query = "" + "@info(name = 'query1') "
+                + "from LoginEvents#window.unique:externalTimeBatch(ip, timestamp, 1 sec, '0', 2 sec) "
+                + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueExternalTimeBatchWindowTest21() {
+        log.info("uniqueExternalTimeBatchWindowTest for fifth parameter invalid type ");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
+        String query = "" + "@info(name = 'query1') "
+                + "from LoginEvents#window.unique:externalTimeBatch(ip, timestamp, 1 sec, 0, '2 sec') "
+                + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueExternalTimeBatchWindowTest22() {
+        log.info("uniqueExternalTimeBatchWindowTest for sixth parameter invalid type ");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
+        String query = "" + "@info(name = 'query1') "
+                + "from LoginEvents#window.unique:externalTimeBatch(ip, timestamp, 1 sec, 0, 2 sec,'true') "
+                + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueExternalTimeBatchWindowTest23() {
+        log.info("uniqueExternalTimeBatchWindowTest for invalid number of parameters ");
+
+        SiddhiManager siddhiManager = new SiddhiManager();
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
+        String query =
+                "" + "@info(name = 'query1') " + "from LoginEvents#window.unique:externalTimeBatch(ip, timestamp) "
+                        + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test
+    public void uniqueExternalTimeBatchWindowTest24() throws InterruptedException {
+        log.info("uniqueExternalTimeBatchWindow test for current state and restore state");
+
+        PersistenceStore persistenceStore = new InMemoryPersistenceStore();
+        SiddhiManager siddhiManager = new SiddhiManager();
+        siddhiManager.setPersistenceStore(persistenceStore);
+
+        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
+        String query = "" + "@info(name = 'query1') "
+                + "from LoginEvents#window.unique:externalTimeBatch(ip,timestamp, 1 sec, 0, 6 sec) "
+                + "select timestamp, ip, count() as total  " + "insert all events into uniqueIps ;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                if (inEvents == null) {
+                    eventCount.incrementAndGet();
+                }
+                if (inEvents != null) {
+                    for (Event event : inEvents) {
+                        eventCount.incrementAndGet();
+                        inEventCount++;
+                        if (inEventCount == 1) {
+                            AssertJUnit.assertEquals(2L, event.getData(2));
+                        } else if (inEventCount == 2) {
+                            AssertJUnit.assertEquals(2L, event.getData(2));
+                        }
+                    }
+                }
+                if (removeEvents != null) {
+                    removeEventCount = removeEventCount + removeEvents.length;
+                }
+                eventArrived = true;
+            }
+        });
+
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[] { 1366335804341L, "192.10.1.3" });
+        inputHandler.send(new Object[] { 1366335804342L, "192.10.1.4" });
+        inputHandler.send(new Object[] { 1366335804342L, "192.10.1.4" });
+        //persisting
+        siddhiAppRuntime.persist();
+        //restarting execution plan
+        siddhiAppRuntime.shutdown();
+        inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
+        siddhiAppRuntime.start();
+        //loading
+        siddhiAppRuntime.restoreLastRevision();
+        inputHandler.send(new Object[] { 1366335814341L, "192.10.1.5" });
+        inputHandler.send(new Object[] { 1366335814345L, "192.10.1.6" });
+        inputHandler.send(new Object[] { 1366335824341L, "192.10.1.7" });
+        SiddhiTestHelper.waitForEvents(waitTime, 2, eventCount, timeout);
+        AssertJUnit.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
+    }
 }

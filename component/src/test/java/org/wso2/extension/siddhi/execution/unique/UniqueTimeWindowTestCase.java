@@ -20,15 +20,19 @@ package org.wso2.extension.siddhi.execution.unique;
 
 import org.apache.log4j.Logger;
 import org.testng.Assert;
+import org.testng.AssertJUnit;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
+import org.wso2.siddhi.core.util.persistence.InMemoryPersistenceStore;
+import org.wso2.siddhi.core.util.persistence.PersistenceStore;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -221,6 +225,88 @@ public class UniqueTimeWindowTestCase {
         SiddhiTestHelper.waitForEvents(waitTime, 1, eventCount, timeout);
         Assert.assertEquals(inEventCount, 3);
         Assert.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowTest6() {
+        log.info("Test for UniqueTime window's parameter time invalid type");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "define stream cseEventStream (symbol string, price float, volume int);";
+        String query =
+                "@info(name = 'query1') from cseEventStream#window.unique:time(symbol, '2 sec') select symbol,price,"
+                        + "volume insert all events into outputStream ;";
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowTest7() {
+        log.info("Test for UniqueTime window's parameter should constant case");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "define stream cseEventStream (symbol string, price float, volume int);";
+        String query =
+                "@info(name = 'query1') from cseEventStream#window.unique:time(symbol,volume) select symbol,price,"
+                        + "volume insert all events into outputStream ;";
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowTest8()  {
+        log.info("Test for UniqueTime window invalid number of parameter");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "define stream cseEventStream (symbol string, price float, volume int);";
+        String query =
+                "@info(name = 'query1') from cseEventStream#window.unique:time(symbol) select symbol,price,"
+                        + "volume insert all events into outputStream ;";
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+    }
+
+    @Test public void uniqueTimeWindowTest9() throws InterruptedException {
+        log.info("UniqueTimeWindow Test for current & restore state");
+
+        PersistenceStore persistenceStore = new InMemoryPersistenceStore();
+        SiddhiManager siddhiManager = new SiddhiManager();
+        siddhiManager.setPersistenceStore(persistenceStore);
+
+        String cseEventStream = "define stream cseEventStream (symbol string, price float, volume int);";
+        String query =
+                "@info(name = 'query1') from cseEventStream#window.unique:time(symbol, 2 sec) select symbol,price,"
+                        + "volume insert all events into outputStream ;";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+
+                if (inEvents != null) {
+                    for (Event event : inEvents) {
+                        eventCount.incrementAndGet();
+                        inEventCount++;
+                        if (inEventCount == 1) {
+                            AssertJUnit.assertEquals(1, event.getData(2));
+                        } else if (inEventCount == 2) {
+                            AssertJUnit.assertEquals(2, event.getData(2));
+                        }
+                    }
+                }
+                eventArrived = true;
+            }
+
+        });
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("cseEventStream");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[] { "IBM", 700f, 1 });
+        //persisting
+        siddhiAppRuntime.persist();
+        //restarting execution plan
+        siddhiAppRuntime.shutdown();
+        inputHandler = siddhiAppRuntime.getInputHandler("cseEventStream");
+        siddhiAppRuntime.start();
+        //loading
+        siddhiAppRuntime.restoreLastRevision();
+        inputHandler.send(new Object[] { "IBM", 60.5f, 2 });
+        SiddhiTestHelper.waitForEvents(waitTime, 2, eventCount, timeout);
+        AssertJUnit.assertEquals(inEventCount, 2);
+        AssertJUnit.assertTrue(eventArrived);
         siddhiAppRuntime.shutdown();
     }
 }
