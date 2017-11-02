@@ -25,10 +25,13 @@ import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
+import org.wso2.siddhi.core.util.persistence.InMemoryPersistenceStore;
+import org.wso2.siddhi.core.util.persistence.PersistenceStore;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -317,6 +320,146 @@ public class UniqueTimeBatchWindowTestCase {
         Assert.assertEquals(inEventCount, 3);
         Assert.assertEquals(removeEventCount, 0);
         AssertJUnit.assertTrue(eventArrived);
+        siddhiAppRuntime.shutdown();
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowBatchTest7() {
+        log.info("TimeBatchWindow Test for Unique Length Batch window should variable case ");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
+        String query = "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch('symbol',1 sec) "
+                + "select symbol, price, volume " + "insert all events into outputStream ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+
+    }
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowBatchTest8() {
+        log.info("TimeBatchWindow Test for Unique Time Batch window invalid type");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
+        String query = "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch(symbol,'1 sec') "
+                + "select symbol, price, volume " + "insert all events into outputStream ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+
+    }
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowBatchTest9() {
+        log.info("TimeBatchWindow Test for Unique Time Batch window Constant case ");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
+        String query = "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch(symbol,volume) "
+                + "select symbol, price, volume " + "insert all events into outputStream ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowBatchTest10() {
+        log.info("TimeBatchWindow Test for invalid number of parameters");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
+        String query = "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch(symbol) "
+                + "select symbol, price, volume " + "insert all events into outputStream ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowBatchTest11() {
+        log.info("TimeBatchWindow Test for Unique Length Batch window variable case length three");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
+        String query =
+                "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch('symbol',1 sec,volume) "
+                        + "select symbol, price, volume " + "insert all events into outputStream ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowBatchTest12() {
+        log.info("TimeBatchWindow Test for UniqueTimeBatch window invalid type case length three");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
+        String query =
+                "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch(symbol,'1 sec',volume) "
+                        + "select symbol, price, volume " + "insert all events into outputStream ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+
+    }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void uniqueTimeWindowBatchTest13() {
+        log.info("TimeBatchWindow Test for Unique Time Batch window should constant case length three");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
+        String query =
+                "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch(symbol,price,volume) "
+                        + "select symbol, price, volume " + "insert all events into outputStream ;";
+
+        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+
+    }
+
+    @Test public void uniqueTimeWindowBatchTest14() throws InterruptedException {
+        log.info("TimeBatchWindow Test1");
+        PersistenceStore persistenceStore = new InMemoryPersistenceStore();
+        SiddhiManager siddhiManager = new SiddhiManager();
+        siddhiManager.setPersistenceStore(persistenceStore);
+        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
+        String query = "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch(symbol,1 sec) "
+                + "select symbol, price, volume " + "insert all events into outputStream ;";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
+        siddhiAppRuntime.addCallback("query1", new QueryCallback() {
+            @Override public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+                if (inEvents != null) {
+                    inEventCount = inEventCount + inEvents.length;
+                    eventCount.addAndGet(inEvents.length);
+                }
+                if (removeEvents != null) {
+                    Assert.assertTrue(inEventCount > removeEventCount, "InEvents arrived before RemoveEvents");
+                    removeEventCount = removeEventCount + removeEvents.length;
+                }
+                eventArrived = true;
+            }
+
+        });
+
+        InputHandler inputHandler = siddhiAppRuntime.getInputHandler("cseEventStream");
+        siddhiAppRuntime.start();
+        inputHandler.send(new Object[] { "IBM", 700f, 1 });
+        SiddhiTestHelper.waitForEvents(2500, 1, eventCount, timeout);
+        inputHandler.send(new Object[] { "WSO2", 61.5f, 2 });
+        inputHandler.send(new Object[] { "IBM", 700f, 3 });
+        inputHandler.send(new Object[] { "WSO2", 60.5f, 4 });
+        SiddhiTestHelper.waitForEvents(1100, 3, eventCount, timeout);
+        inputHandler.send(new Object[] { "IBM", 700f, 5 });
+        inputHandler.send(new Object[] { "WSO2", 60.5f, 6 });
+        SiddhiTestHelper.waitForEvents(waitTime, 6, eventCount, timeout);
+        Assert.assertEquals(inEventCount, 5);
+        siddhiAppRuntime.persist();
+        siddhiAppRuntime.shutdown();
+        inputHandler = siddhiAppRuntime.getInputHandler("cseEventStream");
+        siddhiAppRuntime.start();
+        siddhiAppRuntime.restoreLastRevision();
+        inputHandler.send(new Object[] { "IBM", 700f, 1 });
+        SiddhiTestHelper.waitForEvents(3500, 6, eventCount, timeout);
+        inputHandler.send(new Object[] { "WSO2", 61.5f, 2 });
+        inputHandler.send(new Object[] { "IBM", 700f, 3 });
+        inputHandler.send(new Object[] { "WSO2", 60.5f, 4 });
+        SiddhiTestHelper.waitForEvents(waitTime, 8, eventCount, timeout);
+        Assert.assertEquals(inEventCount, 8);
+        Assert.assertEquals(removeEventCount, 7);
+        Assert.assertTrue(eventArrived);
         siddhiAppRuntime.shutdown();
     }
 }

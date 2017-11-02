@@ -12,6 +12,7 @@
             <class name="org.wso2.extension.siddhi.execution.unique.UniqueFirstWindowTestCase" />
             <class name="org.wso2.extension.siddhi.execution.unique.UniqueExternalTimeBatchWindowTestCase" />
             <class name="org.wso2.extension.siddhi.execution.unique.UniqueFirstTimeBatchWindowTestCase" />
+            <class name="org.wso2.extension.siddhi.execution.unique.UniqueTimeBatchWindowTestCase" />
         </classes>
     </test>
 </suite>
