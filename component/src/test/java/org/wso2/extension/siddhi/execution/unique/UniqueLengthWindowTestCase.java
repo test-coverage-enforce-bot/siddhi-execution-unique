@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.CannotRestoreSiddhiAppStateException;
 import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
@@ -237,7 +238,11 @@ public class UniqueLengthWindowTestCase {
         inputHandler = siddhiAppRuntime.getInputHandler("LoginEvents");
         siddhiAppRuntime.start();
         //loading
-        siddhiAppRuntime.restoreLastRevision();
+        try {
+            siddhiAppRuntime.restoreLastRevision();
+        } catch (CannotRestoreSiddhiAppStateException e) {
+            Assert.fail("Error in restoring last revision");
+        }
         inputHandler.send(new Object[] { System.currentTimeMillis(), "A2", "192.10.1.3" });
         inputHandler.send(new Object[] { System.currentTimeMillis(), "A3", "192.10.1.3" });
 
