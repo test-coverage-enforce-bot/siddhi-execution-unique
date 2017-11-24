@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.CannotRestoreSiddhiAppStateException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
@@ -197,7 +198,11 @@ public class UniqueFirstWindowTestCase {
         executionPlanRuntime.start();
 
         //loading
-        executionPlanRuntime.restoreLastRevision();
+        try {
+            executionPlanRuntime.restoreLastRevision();
+        } catch (CannotRestoreSiddhiAppStateException e) {
+            Assert.fail("Error in restoring last revision");
+        }
 
         inputHandler.send(new Object[]{"MIT", 75.6f, 100});
         inputHandler.send(new Object[]{"WSO2", 75.6f, 110});
