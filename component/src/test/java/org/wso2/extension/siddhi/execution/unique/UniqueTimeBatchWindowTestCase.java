@@ -325,17 +325,6 @@ public class UniqueTimeBatchWindowTestCase {
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
-    public void uniqueTimeWindowBatchTest7() {
-        log.info("TimeBatchWindow Test for Unique Length Batch window should variable case ");
-        SiddhiManager siddhiManager = new SiddhiManager();
-        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
-        String query = "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:timeBatch('symbol',1 sec) "
-                + "select symbol, price, volume " + "insert all events into outputStream ;";
-
-        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
-
-    }
-    @Test(expectedExceptions = SiddhiAppCreationException.class)
     public void uniqueTimeWindowBatchTest8() {
         log.info("TimeBatchWindow Test for Unique Time Batch window invalid type");
         SiddhiManager siddhiManager = new SiddhiManager();
