@@ -110,7 +110,7 @@ public class UniqueTimeLengthBatchWindowProcessor extends WindowProcessor implem
     private SiddhiAppContext siddhiAppContext;
     private boolean isStartTimeEnabled = false;
     private long startTime = 0;
-    private VariableExpressionExecutor uniqueKey;
+    private ExpressionExecutor uniqueKeyExpressionExecutor;
     private boolean eventSent = false;
 
     @Override
@@ -120,7 +120,7 @@ public class UniqueTimeLengthBatchWindowProcessor extends WindowProcessor implem
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 3) {
             if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
-                this.uniqueKey = (VariableExpressionExecutor) attributeExpressionExecutors[0];
+                this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
             } else {
                 throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
                         + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
@@ -162,7 +162,7 @@ public class UniqueTimeLengthBatchWindowProcessor extends WindowProcessor implem
             }
         } else if (attributeExpressionExecutors.length == 4) {
             if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
-                this.uniqueKey = (VariableExpressionExecutor) attributeExpressionExecutors[0];
+                this.uniqueKeyExpressionExecutor = (VariableExpressionExecutor) attributeExpressionExecutors[0];
             } else {
                 throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
                         + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
@@ -269,7 +269,7 @@ public class UniqueTimeLengthBatchWindowProcessor extends WindowProcessor implem
                     continue;
                 }
                 StreamEvent clonedStreamEvent = streamEventCloner.copyStreamEvent(streamEvent);
-                addUniqueEvent(uniqueEventMap, uniqueKey, clonedStreamEvent);
+                addUniqueEvent(uniqueEventMap, uniqueKeyExpressionExecutor, clonedStreamEvent);
                 if (uniqueEventMap.size() == length) {
                     sendEventsByLength = true; // emitting batch based on length
                     break;
@@ -335,9 +335,10 @@ public class UniqueTimeLengthBatchWindowProcessor extends WindowProcessor implem
         return scheduler;
     }
 
-    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap, VariableExpressionExecutor uniqueKey,
+    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap,
+                                  ExpressionExecutor uniqueKeyExpressionExecutor,
                                   StreamEvent clonedStreamEvent) {
-        uniqueEventMap.put(clonedStreamEvent.getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
+        uniqueEventMap.put(uniqueKeyExpressionExecutor.execute(clonedStreamEvent), clonedStreamEvent);
     }
 
     /**

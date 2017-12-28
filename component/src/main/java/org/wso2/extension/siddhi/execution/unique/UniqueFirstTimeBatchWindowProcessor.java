@@ -23,7 +23,7 @@ import org.wso2.siddhi.annotation.Extension;
 import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.event.stream.StreamEvent;
-import org.wso2.siddhi.core.executor.VariableExpressionExecutor;
+import org.wso2.siddhi.core.executor.ExpressionExecutor;
 
 import java.util.Map;
 
@@ -69,9 +69,11 @@ import java.util.Map;
 
 public class UniqueFirstTimeBatchWindowProcessor extends UniqueTimeBatchWindowProcessor {
     @Override protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap,
-            VariableExpressionExecutor uniqueKey, StreamEvent clonedStreamEvent) {
-        if (!uniqueEventMap.containsKey(clonedStreamEvent.getAttribute(uniqueKey.getPosition()))) {
-            uniqueEventMap.put(clonedStreamEvent.getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
+                                            ExpressionExecutor uniqueKeyExpressionExecutor,
+                                            StreamEvent clonedStreamEvent) {
+        String uniqueKey = uniqueKeyExpressionExecutor.execute(clonedStreamEvent).toString();
+        if (!uniqueEventMap.containsKey(uniqueKey)) {
+            uniqueEventMap.put(uniqueKey, clonedStreamEvent);
         }
     }
 }

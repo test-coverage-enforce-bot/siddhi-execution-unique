@@ -103,7 +103,7 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
     private SiddhiAppContext siddhiAppContext;
     private boolean isStartTimeEnabled = false;
     private long startTime = 0;
-    private VariableExpressionExecutor uniqueKey;
+    private ExpressionExecutor uniqueKeyExpressionExecutor;
 
     @Override
     protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
@@ -112,7 +112,7 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 2) {
             if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
-                this.uniqueKey = (VariableExpressionExecutor) attributeExpressionExecutors[0];
+                this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
             } else {
                 throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
                         + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
@@ -137,7 +137,7 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
             }
         } else if (attributeExpressionExecutors.length == 3) {
             if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
-                this.uniqueKey = (VariableExpressionExecutor) attributeExpressionExecutors[0];
+                this.uniqueKeyExpressionExecutor = (VariableExpressionExecutor) attributeExpressionExecutors[0];
             } else {
                 throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
                         + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
@@ -220,7 +220,7 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
                     continue;
                 }
                 StreamEvent clonedStreamEvent = streamEventCloner.copyStreamEvent(streamEvent);
-                addUniqueEvent(uniqueEventMap, uniqueKey, clonedStreamEvent);
+                addUniqueEvent(uniqueEventMap, uniqueKeyExpressionExecutor, clonedStreamEvent);
             }
             streamEventChunk.clear();
             if (sendEvents) {
@@ -274,9 +274,10 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         return scheduler;
     }
 
-    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap, VariableExpressionExecutor uniqueKey,
+    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap,
+                                  ExpressionExecutor uniqueKeyExpressionExecutor,
                                   StreamEvent clonedStreamEvent) {
-        uniqueEventMap.put(clonedStreamEvent.getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
+        uniqueEventMap.put(uniqueKeyExpressionExecutor.execute(clonedStreamEvent), clonedStreamEvent);
     }
 
     /**

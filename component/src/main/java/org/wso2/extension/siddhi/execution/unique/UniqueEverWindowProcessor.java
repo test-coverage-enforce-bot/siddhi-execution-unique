@@ -63,7 +63,7 @@ import static java.util.Collections.singletonMap;
         parameters = {
                 @Parameter(name = "unique.key",
                         description = "The attribute that should be checked for uniqueness."
-                               + "If multiple attributes need to be checked, you can specify them "
+                                + "If multiple attributes need to be checked, you can specify them "
                                 + "as a comma-separated list.",
                         type = {DataType.INT, DataType.LONG, DataType.FLOAT,
                                 DataType.BOOL, DataType.DOUBLE}),
@@ -103,20 +103,18 @@ import static java.util.Collections.singletonMap;
 
 public class UniqueEverWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
-    private VariableExpressionExecutor[] variableExpressionExecutors;
+    private ExpressionExecutor[] expressionExecutors;
 
 
-    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
-            boolean b, SiddhiAppContext siddhiAppContext) {
-
-        variableExpressionExecutors = new VariableExpressionExecutor[attributeExpressionExecutors.length];
-        for (int i = 0; i < attributeExpressionExecutors.length; i++) {
-            variableExpressionExecutors[i] = (VariableExpressionExecutor) attributeExpressionExecutors[i];
-        }
+    @Override
+    protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+                        boolean b, SiddhiAppContext siddhiAppContext) {
+        expressionExecutors = attributeExpressionExecutors;
     }
 
-    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-            StreamEventCloner streamEventCloner) {
+    @Override
+    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+                           StreamEventCloner streamEventCloner) {
         synchronized (this) {
             long currentTime = siddhiAppContext.getTimestampGenerator().currentTime();
 
@@ -140,24 +138,29 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
         nextProcessor.process(streamEventChunk);
     }
 
-    @Override public void start() {
+    @Override
+    public void start() {
         //Do nothing
     }
 
 
-    @Override public void stop() {
+    @Override
+    public void stop() {
         //Do nothing
     }
 
-    @Override public Map<String, Object> currentState() {
+    @Override
+    public Map<String, Object> currentState() {
         return singletonMap("map", this.map);
     }
 
-    @Override public synchronized void restoreState(Map<String, Object> map) {
+    @Override
+    public synchronized void restoreState(Map<String, Object> map) {
         this.map = (ConcurrentMap<String, StreamEvent>) map.get("map");
     }
 
-    @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+    @Override
+    public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
         if (compiledCondition instanceof Operator) {
             return ((Operator) compiledCondition).find(matchingEvent, map.values(), streamEventCloner);
         } else {
@@ -166,17 +169,20 @@ public class UniqueEverWindowProcessor extends WindowProcessor implements Findab
     }
 
 
-    @Override public CompiledCondition compileCondition(Expression expression,
-            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
-            List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, Table> tableMap, String s) {
+    @Override
+    public CompiledCondition compileCondition(Expression expression,
+                                              MatchingMetaInfoHolder matchingMetaInfoHolder,
+                                              SiddhiAppContext siddhiAppContext,
+                                              List<VariableExpressionExecutor> variableExpressionExecutors,
+                                              Map<String, Table> tableMap, String s) {
         return OperatorParser.constructOperator(map.values(), expression, matchingMetaInfoHolder, siddhiAppContext,
                 variableExpressionExecutors, tableMap, this.queryName);
     }
 
     private String generateKey(StreamEvent event) {
         StringBuilder stringBuilder = new StringBuilder();
-        for (VariableExpressionExecutor executor : variableExpressionExecutors) {
-            stringBuilder.append(event.getAttribute(executor.getPosition()));
+        for (ExpressionExecutor executor : expressionExecutors) {
+            stringBuilder.append(executor.execute(event));
         }
         return stringBuilder.toString();
     }

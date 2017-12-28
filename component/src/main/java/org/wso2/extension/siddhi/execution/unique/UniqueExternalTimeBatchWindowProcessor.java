@@ -135,7 +135,7 @@ public class UniqueExternalTimeBatchWindowProcessor extends WindowProcessor
     private long lastCurrentEventTime;
     private boolean flushed = false;
     private boolean storeExpiredEvents = false;
-    private VariableExpressionExecutor variableExpressionExecutor;
+    private ExpressionExecutor uniqueExpressionExecutor;
     private boolean replaceTimestampWithBatchEndTime = false;
     private boolean outputExpectsExpiredEvents;
 
@@ -149,12 +149,7 @@ public class UniqueExternalTimeBatchWindowProcessor extends WindowProcessor
         this.outputExpectsExpiredEvents = outputExpectsExpiredEvents;
         if (attributeExpressionExecutors.length >= 3 && attributeExpressionExecutors.length <= 6) {
 
-            if (!(attributeExpressionExecutors[0] instanceof VariableExpressionExecutor)) {
-                throw new SiddhiAppValidationException(
-                        "ExternalTime window's 1st parameter uniqueAttribute should be a variable, but found "
-                                + attributeExpressionExecutors[0].getClass());
-            }
-            variableExpressionExecutor = (VariableExpressionExecutor) attributeExpressionExecutors[0];
+            uniqueExpressionExecutor = attributeExpressionExecutors[0];
 
             if (!(attributeExpressionExecutors[1] instanceof VariableExpressionExecutor)) {
                 throw new SiddhiAppValidationException(
@@ -427,7 +422,7 @@ public class UniqueExternalTimeBatchWindowProcessor extends WindowProcessor
         if (replaceTimestampWithBatchEndTime) {
             clonedStreamEvent.setAttribute(endTime, timestampExpressionExecutor.getPosition());
         }
-        currentEvents.put(variableExpressionExecutor.execute(clonedStreamEvent), clonedStreamEvent);
+        currentEvents.put(uniqueExpressionExecutor.execute(clonedStreamEvent), clonedStreamEvent);
         if (resetEvent == null) {
             resetEvent = streamEventCloner.copyStreamEvent(currStreamEvent);
             resetEvent.setType(ComplexEvent.Type.RESET);

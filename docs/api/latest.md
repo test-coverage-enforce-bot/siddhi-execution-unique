@@ -466,7 +466,7 @@ insert all events into OutputStream ;
 
 ### timeLengthBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
 
-<p style="word-wrap: break-word">This is a batch (tumbling) time length window that is updated with the latest events based on a unique key parameter. The window will tumble upon elapse of the time window or when length number of unique events arrived. If a new event that arrives within the window period has a value for the key parameter which matches that of an existing event, the existing event expires and it is replaced by the later event. </p>
+<p style="word-wrap: break-word">This is a batch (tumbling) time length window that is updated with the latest events based on a unique key parameter. The window will tumble upon elapse of the time window or when length number of unique events have arrived. If a new event that arrives within the window period has a value for the key parameter which matches that of an existing event, the existing event expires and it is replaced by the later event. </p>
 
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
 ```
@@ -521,6 +521,7 @@ unique:timeLengthBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> windo
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
 ```
 define stream CseEventStream (symbol string, price float, volume int)
+
 from CseEventStream#window.unique:timeLengthBatch(symbol, 1 sec, 20)
 select symbol, price, volume
 insert all events into OutputStream ;

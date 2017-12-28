@@ -71,7 +71,7 @@ import java.util.concurrent.ConcurrentHashMap;
                 syntax = "define stream CseEventStream (symbol string, price float, volume int)\n" +
                         "from CseEventStream#window.unique:length(symbol,10)\n" +
                         "select symbol, price, volume\n" +
-                        "insert all events into OutputStream ;" ,
+                        "insert all events into OutputStream ;",
 
                 description = "In this configuration, the window holds the latest 10 unique events."
                         + " The latest events are selected based on the symbol attribute. "
@@ -85,17 +85,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class UniqueLengthWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentHashMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
-    private VariableExpressionExecutor[] variableExpressionExecutors;
+    private ExpressionExecutor uniqueKeyExpressionExecutor;
     private int length;
     private int count = 0;
     private ComplexEventChunk<StreamEvent> expiredEventChunk;
 
-    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
-            boolean b, SiddhiAppContext siddhiAppContext) {
+    @Override
+    protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+                        boolean b, SiddhiAppContext siddhiAppContext) {
         expiredEventChunk = new ComplexEventChunk<StreamEvent>(false);
-        variableExpressionExecutors = new VariableExpressionExecutor[attributeExpressionExecutors.length - 1];
         if (attributeExpressionExecutors.length == 2) {
-            variableExpressionExecutors[0] = (VariableExpressionExecutor) attributeExpressionExecutors[0];
+            uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
             length = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1]).getValue();
         } else {
             throw new SiddhiAppValidationException("Unique Length window should only have two parameters "
@@ -105,8 +105,9 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
 
     }
 
-    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-            StreamEventCloner streamEventCloner) {
+    @Override
+    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+                           StreamEventCloner streamEventCloner) {
         synchronized (this) {
             long currentTime = siddhiAppContext.getTimestampGenerator().currentTime();
             while (streamEventChunk.hasNext()) {
@@ -148,15 +149,18 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
         nextProcessor.process(streamEventChunk);
     }
 
-    @Override public void start() {
+    @Override
+    public void start() {
         //Do nothing
     }
 
-    @Override public void stop() {
+    @Override
+    public void stop() {
         //Do nothing
     }
 
-    @Override public synchronized Map<String, Object> currentState() {
+    @Override
+    public synchronized Map<String, Object> currentState() {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("expiredEventChunk", expiredEventChunk.getFirst());
         map.put("count", count);
@@ -164,14 +168,16 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
         return map;
     }
 
-    @Override public synchronized void restoreState(Map<String, Object> map) {
+    @Override
+    public synchronized void restoreState(Map<String, Object> map) {
         expiredEventChunk.clear();
         expiredEventChunk.add((StreamEvent) map.get("expiredEventChunk"));
         count = (Integer) map.get("count");
         this.map = (ConcurrentHashMap) map.get("map");
     }
 
-    @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+    @Override
+    public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
         if (compiledCondition instanceof Operator) {
             return ((Operator) compiledCondition).find(matchingEvent, expiredEventChunk, streamEventCloner);
         } else {
@@ -180,18 +186,16 @@ public class UniqueLengthWindowProcessor extends WindowProcessor implements Find
     }
 
     private String generateKey(StreamEvent event) {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (VariableExpressionExecutor executor : variableExpressionExecutors) {
-            stringBuilder.append(event.getAttribute(executor.getPosition()));
-        }
-        return stringBuilder.toString();
+        return uniqueKeyExpressionExecutor.execute(event).toString();
     }
 
-    @Override public CompiledCondition compileCondition(Expression expression,
-            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
-            List<VariableExpressionExecutor> list, Map<String, Table> map, String s) {
-        return OperatorParser
-                .constructOperator(expiredEventChunk, expression, matchingMetaInfoHolder, siddhiAppContext, list, map,
-                        this.queryName);
+    @Override
+    public CompiledCondition compileCondition(Expression expression,
+                                              MatchingMetaInfoHolder matchingMetaInfoHolder,
+                                              SiddhiAppContext siddhiAppContext,
+                                              List<VariableExpressionExecutor> list, Map<String, Table> map,
+                                              String queryName) {
+        return OperatorParser.constructOperator(expiredEventChunk, expression, matchingMetaInfoHolder,
+                siddhiAppContext, list, map, queryName);
     }
 }

@@ -983,20 +983,6 @@ public class UniqueExternalTimeBatchWindowTestCase {
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
-    public void uniqueExternalTimeBatchWindowTest16() {
-        log.info("uniqueExternalTimeBatchWindowTest for first parameter should variable case");
-
-        SiddhiManager siddhiManager = new SiddhiManager();
-
-        String cseEventStream = "" + "define stream LoginEvents (timestamp long, ip string) ;";
-        String query = "" + "@info(name = 'query1') "
-                + "from LoginEvents#window.unique:externalTimeBatch('uniqueAttribute', timestamp, 1 sec, 0, 2 sec) "
-                + "select timestamp, ip, count() as total  " + "insert into uniqueIps ;";
-
-        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
-    }
-
-    @Test(expectedExceptions = SiddhiAppCreationException.class)
     public void uniqueExternalTimeBatchWindowTest17() {
         log.info("uniqueExternalTimeBatchWindowTest for second parameter should variable case ");
 
