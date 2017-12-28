@@ -109,13 +109,6 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
         this.siddhiAppContext = siddhiAppContext;
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 2) {
-            if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
-                this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
-            } else {
-                throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
-                        + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
-                        .getClass().getCanonicalName());
-            }
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     this.windowLength = (Integer) (((ConstantExpressionExecutor) attributeExpressionExecutors[1])

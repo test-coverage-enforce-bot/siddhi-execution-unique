@@ -111,13 +111,6 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         this.siddhiAppContext = siddhiAppContext;
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 2) {
-            if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
-                this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
-            } else {
-                throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
-                        + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
-                        .getClass().getCanonicalName());
-            }
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
@@ -136,13 +129,6 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
                         .getClass().getCanonicalName());
             }
         } else if (attributeExpressionExecutors.length == 3) {
-            if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
-                this.uniqueKeyExpressionExecutor = (VariableExpressionExecutor) attributeExpressionExecutors[0];
-            } else {
-                throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
-                        + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
-                        .getClass().getCanonicalName());
-            }
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
