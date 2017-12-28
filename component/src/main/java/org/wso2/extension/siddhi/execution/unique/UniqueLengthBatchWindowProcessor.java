@@ -109,6 +109,7 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
         this.siddhiAppContext = siddhiAppContext;
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 2) {
+            this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     this.windowLength = (Integer) (((ConstantExpressionExecutor) attributeExpressionExecutors[1])

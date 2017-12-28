@@ -111,6 +111,7 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
         this.siddhiAppContext = siddhiAppContext;
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 2) {
+            this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
@@ -129,6 +130,7 @@ public class UniqueTimeBatchWindowProcessor extends WindowProcessor implements S
                         .getClass().getCanonicalName());
             }
         } else if (attributeExpressionExecutors.length == 3) {
+                this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
