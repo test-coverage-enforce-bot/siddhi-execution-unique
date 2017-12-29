@@ -155,6 +155,7 @@ public class UniqueTimeLengthBatchWindowProcessor extends WindowProcessor implem
                         .getClass().getCanonicalName());
             }
         } else if (attributeExpressionExecutors.length == 4) {
+            this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     timeInMilliSeconds = (Integer) ((ConstantExpressionExecutor) attributeExpressionExecutors[1])
