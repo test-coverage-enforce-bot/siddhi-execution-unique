@@ -83,22 +83,20 @@ import java.util.Map;
                 @Parameter(name = "start.time",
                         description = "This specifies an offset in milliseconds in order to start the" +
                                 " window at a time different to the standard time.",
-                        defaultValue = "0",
+                        defaultValue = "Timestamp of first event",
                         type = {DataType.INT}, optional = true),
                 @Parameter(name = "time.out",
                         description = "Time to wait for arrival of new event, before flushing " +
-                                "and giving output for events belonging to a specific batch. If timeout is " +
-                                "not provided, system waits till an event from next batch arrives to " +
-                                "flush current batch.",
+                                "and giving output for events belonging to a specific batch.",
                         type = {DataType.INT, DataType.LONG},
                         optional = true,
-                        defaultValue = "0") ,
+                        defaultValue = "System waits till an event from next batch arrives to flush current batch") ,
                 @Parameter(name = "replace.time.stamp.with.batch.end.time",
-                        description = "Replaces the time stamp value (That is pointed by the 2nd parameter) "
+                        description = "Replaces the timestamp value (That is pointed by the 2nd parameter) "
                                 + "with the corresponding batch end time stamp." ,
                         type = {DataType.INT, DataType.LONG},
                         optional = true,
-                        defaultValue = "0")
+                        defaultValue = "false")
         },
         examples = {
                 @Example(

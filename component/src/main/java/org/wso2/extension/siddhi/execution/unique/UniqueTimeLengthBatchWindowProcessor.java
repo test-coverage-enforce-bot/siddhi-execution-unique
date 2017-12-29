@@ -74,9 +74,10 @@ import java.util.Map;
 
                 @Parameter(name = "start.time",
                         description = "This specifies an offset in milliseconds in order to start the" +
-                                " window at a time different to the standard time. When this is not provided " +
-                                "the window calculation will begin from first event arrival.",
-                        type = {DataType.INT, DataType.LONG}, optional = true, defaultValue = " "),
+                                " window at a time different to the standard time.",
+                        type = {DataType.INT, DataType.LONG},
+                        optional = true,
+                        defaultValue = "Timestamp of first event"),
 
                 @Parameter(name = "window.length",
                         description = "The number of events the window should tumble.",
