@@ -1,4 +1,4 @@
-# API Docs - v4.0.21
+# API Docs - v4.0.22-SNAPSHOT
 
 ## Unique
 
@@ -437,7 +437,7 @@ unique:timeBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time
     </tr>
     <tr>
         <td style="vertical-align: top">window.time</td>
-        <td style="vertical-align: top; word-wrap: break-word">The sliding time period for which the window should hold events.</td>
+        <td style="vertical-align: top; word-wrap: break-word">The tumbling time period for which the window should hold events.</td>
         <td style="vertical-align: top"></td>
         <td style="vertical-align: top">INT<br>LONG</td>
         <td style="vertical-align: top">No</td>
@@ -445,8 +445,8 @@ unique:timeBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time
     </tr>
     <tr>
         <td style="vertical-align: top">start.time</td>
-        <td style="vertical-align: top; word-wrap: break-word">This specifies an offset in milliseconds in order to start the window at a time different to the standard time.</td>
-        <td style="vertical-align: top">0</td>
+        <td style="vertical-align: top; word-wrap: break-word">This specifies an offset in milliseconds in order to start the window at a time different to the standard time. When this is not provided the window calculation will begin from first event arrival.</td>
+        <td style="vertical-align: top"> </td>
         <td style="vertical-align: top">INT<br>LONG</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
@@ -457,7 +457,72 @@ unique:timeBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
 ```
 define stream CseEventStream (symbol string, price float, volume int)
+
 from CseEventStream#window.unique:timeBatch(symbol, 1 sec)
+select symbol, price, volume
+insert all events into OutputStream ;
+```
+<p style="word-wrap: break-word">This window holds the latest unique events that arrive from the CseEventStream at a given time, and returns all evens to the OutputStream stream. It is updated every second based on the latest values for the symbol attribute.</p>
+
+### timeLengthBatch *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#window">(Window)</a>*
+
+<p style="word-wrap: break-word">This is a batch (tumbling) time length window that is updated with the latest events based on a unique key parameter. The window will tumble upon elapse of the time window or when length number of unique events have arrived. If a new event that arrives within the window period has a value for the key parameter which matches that of an existing event, the existing event expires and it is replaced by the later event. </p>
+
+<span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
+```
+unique:timeLengthBatch(<INT|LONG|FLOAT|BOOL|DOUBLE> unique.key, <INT|LONG> window.time, <INT|LONG> start.time, <INT> window.length)
+```
+
+<span id="query-parameters" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">QUERY PARAMETERS</span>
+<table>
+    <tr>
+        <th>Name</th>
+        <th style="min-width: 20em">Description</th>
+        <th>Default Value</th>
+        <th>Possible Data Types</th>
+        <th>Optional</th>
+        <th>Dynamic</th>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">unique.key</td>
+        <td style="vertical-align: top; word-wrap: break-word">The attribute that should be checked for uniqueness.</td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">INT<br>LONG<br>FLOAT<br>BOOL<br>DOUBLE</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">window.time</td>
+        <td style="vertical-align: top; word-wrap: break-word">The sliding time period for which the window should hold events.</td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">INT<br>LONG</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">start.time</td>
+        <td style="vertical-align: top; word-wrap: break-word">This specifies an offset in milliseconds in order to start the window at a time different to the standard time. When this is not provided the window calculation will begin from first event arrival.</td>
+        <td style="vertical-align: top"> </td>
+        <td style="vertical-align: top">INT<br>LONG</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">window.length</td>
+        <td style="vertical-align: top; word-wrap: break-word">The number of events the window should tumble.</td>
+        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">INT</td>
+        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+</table>
+
+<span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
+<span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
+```
+define stream CseEventStream (symbol string, price float, volume int)
+
+from CseEventStream#window.unique:timeLengthBatch(symbol, 1 sec, 20)
 select symbol, price, volume
 insert all events into OutputStream ;
 ```

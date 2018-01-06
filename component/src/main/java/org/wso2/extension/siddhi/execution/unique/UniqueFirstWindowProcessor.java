@@ -58,7 +58,7 @@ import static java.util.Collections.singletonMap;
         description = "This is a window that holds only the first unique events"
                 + " that are unique according to the unique key parameter."
                 + " When a new event arrives with a key that is already in the window,"
-                + " that event is not processed by the window." ,
+                + " that event is not processed by the window.",
 
         parameters = {
                 @Parameter(name = "unique.key",
@@ -71,8 +71,8 @@ import static java.util.Collections.singletonMap;
         examples = {
                 @Example(
                         syntax = "define stream LoginEvents (timeStamp long, ip string);\n" +
-                                 "from LoginEvents#window.unique:first(ip)\n" +
-                                 "insert into UniqueIps ;",
+                                "from LoginEvents#window.unique:first(ip)\n" +
+                                "insert into UniqueIps ;",
 
                         description = "This returns the first unique items that arrive from the LoginEvents stream,"
                                 + " and inserts them into the UniqueIps stream."
@@ -84,19 +84,18 @@ import static java.util.Collections.singletonMap;
 
 public class UniqueFirstWindowProcessor extends WindowProcessor implements FindableProcessor {
     private ConcurrentMap<String, StreamEvent> map = new ConcurrentHashMap<String, StreamEvent>();
-    private VariableExpressionExecutor[] variableExpressionExecutors;
+    private ExpressionExecutor[] uniqueExpressionExecutors;
 
-    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
-            boolean b, SiddhiAppContext siddhiAppContext) {
-        variableExpressionExecutors = new VariableExpressionExecutor[attributeExpressionExecutors.length];
-        for (int i = 0; i < attributeExpressionExecutors.length; i++) {
-            variableExpressionExecutors[i] = (VariableExpressionExecutor) attributeExpressionExecutors[i];
-        }
+    @Override
+    protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+                        boolean b, SiddhiAppContext siddhiAppContext) {
+        uniqueExpressionExecutors = attributeExpressionExecutors;
 
     }
 
-    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-            StreamEventCloner streamEventCloner) {
+    @Override
+    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+                           StreamEventCloner streamEventCloner) {
         synchronized (this) {
             while (streamEventChunk.hasNext()) {
                 StreamEvent streamEvent = streamEventChunk.next();
@@ -113,31 +112,36 @@ public class UniqueFirstWindowProcessor extends WindowProcessor implements Finda
         nextProcessor.process(streamEventChunk);
     }
 
-    @Override public void start() {
+    @Override
+    public void start() {
         //Do nothing
     }
 
-    @Override public void stop() {
+    @Override
+    public void stop() {
         //Do nothing
     }
 
-    @Override public Map<String, Object> currentState() {
-        return singletonMap("map" , this.map);
+    @Override
+    public Map<String, Object> currentState() {
+        return singletonMap("map", this.map);
     }
 
-    @Override public void restoreState(Map<String, Object> map) {
+    @Override
+    public void restoreState(Map<String, Object> map) {
         this.map = (ConcurrentMap<String, StreamEvent>) map.get("map");
     }
 
     private String generateKey(StreamEvent event) {
         StringBuilder stringBuilder = new StringBuilder();
-        for (VariableExpressionExecutor executor : variableExpressionExecutors) {
-            stringBuilder.append(event.getAttribute(executor.getPosition()));
+        for (ExpressionExecutor executor : uniqueExpressionExecutors) {
+            stringBuilder.append(executor.execute(event));
         }
         return stringBuilder.toString();
     }
 
-    @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+    @Override
+    public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
         if (compiledCondition instanceof Operator) {
             return ((Operator) compiledCondition).find(matchingEvent, map.values(), streamEventCloner);
         } else {
@@ -145,10 +149,13 @@ public class UniqueFirstWindowProcessor extends WindowProcessor implements Finda
         }
     }
 
-    @Override public CompiledCondition compileCondition(Expression expression,
-            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
-            List<VariableExpressionExecutor> variableExpressionExecutors, Map<String, Table> eventTableMap, String s) {
-        return OperatorParser.constructOperator(this.map.values(), expression, matchingMetaInfoHolder, siddhiAppContext,
-                variableExpressionExecutors, eventTableMap, this.queryName);
+    @Override
+    public CompiledCondition compileCondition(Expression expression,
+                                              MatchingMetaInfoHolder matchingMetaInfoHolder,
+                                              SiddhiAppContext siddhiAppContext,
+                                              List<VariableExpressionExecutor> variableExpressionExecutors,
+                                              Map<String, Table> eventTableMap, String queryName) {
+        return OperatorParser.constructOperator(this.map.values(), expression, matchingMetaInfoHolder,
+                siddhiAppContext, variableExpressionExecutors, eventTableMap, queryName);
     }
 }

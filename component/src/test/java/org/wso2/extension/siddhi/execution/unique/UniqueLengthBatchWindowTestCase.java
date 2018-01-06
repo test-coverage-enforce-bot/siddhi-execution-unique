@@ -421,19 +421,6 @@ public class UniqueLengthBatchWindowTestCase {
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
-    public void uniqueLengthBatchWindowTest9() {
-        log.info("Test for Unique Length Batch window should variable case");
-
-        final int length = 4;
-        SiddhiManager siddhiManager = new SiddhiManager();
-        String cseEventStream = "" + "define stream cseEventStream (symbol string, price float, volume int);";
-        String query =
-                "" + "@info(name = 'query1') " + "from cseEventStream#window.unique:lengthBatch('symbol'," + length
-                        + ") " + "select symbol, price, volume " + "insert expired events into outputStream ;";
-        siddhiManager.createSiddhiAppRuntime(cseEventStream + query);
-    }
-
-    @Test(expectedExceptions = SiddhiAppCreationException.class)
     public void uniqueLengthBatchWindowTest10() {
         log.info("Test for Unique Length Batch window's Length invalid type case");
 

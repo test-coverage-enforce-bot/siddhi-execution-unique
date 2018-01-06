@@ -62,7 +62,7 @@ import java.util.Map;
                 + " (i.e., for the last set of events of the specified number in a tumbling manner)."
                 + " When a new event that arrives within the a window length has the same value"
                 + " for the unique key parameter as an existing event is the window,"
-                + " the previous event is replaced by the new event." ,
+                + " the previous event is replaced by the new event.",
 
         parameters = {
                 @Parameter(name = "unique.key",
@@ -75,7 +75,7 @@ import java.util.Map;
         },
         examples = {
                 @Example(
-                        syntax = "define window CseEventWindow (symbol string, price float, volume int) " +
+                        syntax = "define window CseEventWindow (symbol string, price float, volume int)\n\n " +
                                 "from CseEventStream#window.unique:lengthBatch(symbol, 10)\n" +
                                 "select symbol, price, volume\n" +
                                 "insert expired events into OutputStream ;",
@@ -99,22 +99,17 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
     private ComplexEventChunk<StreamEvent> eventsToBeExpired = null;
     private SiddhiAppContext siddhiAppContext;
     private StreamEvent resetEvent = null;
-    private VariableExpressionExecutor uniqueKey;
+    private ExpressionExecutor uniqueKeyExpressionExecutor;
     private Map<Object, StreamEvent> uniqueEventMap = new HashMap<>();
 
 
-    @Override protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
-            boolean b, SiddhiAppContext siddhiAppContext) {
+    @Override
+    protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader configReader,
+                        boolean b, SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
         this.eventsToBeExpired = new ComplexEventChunk<>(false);
         if (attributeExpressionExecutors.length == 2) {
-            if (attributeExpressionExecutors[0] instanceof VariableExpressionExecutor) {
-                this.uniqueKey = (VariableExpressionExecutor) attributeExpressionExecutors[0];
-            } else {
-                throw new SiddhiAppValidationException("Unique Length Batch window should have variable "
-                        + "for Unique Key parameter but found an attribute " + attributeExpressionExecutors[0]
-                        .getClass().getCanonicalName());
-            }
+            this.uniqueKeyExpressionExecutor = attributeExpressionExecutors[0];
             if (attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor) {
                 if (attributeExpressionExecutors[1].getReturnType() == Attribute.Type.INT) {
                     this.windowLength = (Integer) (((ConstantExpressionExecutor) attributeExpressionExecutors[1])
@@ -138,8 +133,9 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
     }
 
 
-    @Override protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
-            StreamEventCloner streamEventCloner) {
+    @Override
+    protected void process(ComplexEventChunk<StreamEvent> streamEventChunk, Processor nextProcessor,
+                           StreamEventCloner streamEventCloner) {
         List<ComplexEventChunk<StreamEvent>> streamEventChunks = new ArrayList<ComplexEventChunk<StreamEvent>>();
         synchronized (this) {
             ComplexEventChunk<StreamEvent> outputStreamEventChunk = new ComplexEventChunk<StreamEvent>(true);
@@ -150,7 +146,7 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
                     continue;
                 }
                 StreamEvent clonedStreamEvent = streamEventCloner.copyStreamEvent(streamEvent);
-                addUniqueEvent(uniqueEventMap, uniqueKey, clonedStreamEvent);
+                addUniqueEvent(uniqueEventMap, uniqueKeyExpressionExecutor, clonedStreamEvent);
                 if (uniqueEventMap.size() == windowLength) {
                     for (StreamEvent event : uniqueEventMap.values()) {
                         event.setTimestamp(currentTime);
@@ -191,20 +187,23 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
         }
     }
 
-    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap, VariableExpressionExecutor uniqueKey,
-            StreamEvent clonedStreamEvent) {
-        uniqueEventMap.put(clonedStreamEvent.getAttribute(uniqueKey.getPosition()), clonedStreamEvent);
+    protected void addUniqueEvent(Map<Object, StreamEvent> uniqueEventMap, ExpressionExecutor uniqueKey,
+                                  StreamEvent clonedStreamEvent) {
+        uniqueEventMap.put(uniqueKey.execute(clonedStreamEvent), clonedStreamEvent);
     }
 
-    @Override public void start() {
+    @Override
+    public void start() {
         //Do nothing
     }
 
-    @Override public void stop() {
+    @Override
+    public void stop() {
         //Do nothing
     }
 
-    @Override public Map<String, Object> currentState() {
+    @Override
+    public Map<String, Object> currentState() {
         if (eventsToBeExpired != null) {
             Map<String, Object> map = new HashMap<>();
             map.put("currentEventChunk", currentEventChunk.getFirst());
@@ -221,7 +220,8 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
         }
     }
 
-    @Override public void restoreState(Map<String, Object> map) {
+    @Override
+    public void restoreState(Map<String, Object> map) {
         if (map.size() > 3) {
             currentEventChunk.clear();
             currentEventChunk.add((StreamEvent) map.get("currentEventChunk"));
@@ -237,7 +237,8 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
         }
     }
 
-    @Override public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
+    @Override
+    public StreamEvent find(StateEvent matchingEvent, CompiledCondition compiledCondition) {
         if (compiledCondition instanceof Operator) {
             return ((Operator) compiledCondition).find(matchingEvent, uniqueEventMap.values(), streamEventCloner);
         } else {
@@ -246,11 +247,13 @@ public class UniqueLengthBatchWindowProcessor extends WindowProcessor implements
 
     }
 
-    @Override public CompiledCondition compileCondition(Expression expression,
-            MatchingMetaInfoHolder matchingMetaInfoHolder, SiddhiAppContext siddhiAppContext,
-            List<VariableExpressionExecutor> list, Map<String, Table> map, String s) {
-        return OperatorParser
-                .constructOperator(uniqueEventMap.values(), expression, matchingMetaInfoHolder, siddhiAppContext, list,
-                        map, this.queryName);
+    @Override
+    public CompiledCondition compileCondition(Expression expression,
+                                              MatchingMetaInfoHolder matchingMetaInfoHolder,
+                                              SiddhiAppContext siddhiAppContext,
+                                              List<VariableExpressionExecutor> list, Map<String, Table> map,
+                                              String queryName) {
+        return OperatorParser.constructOperator(uniqueEventMap.values(), expression, matchingMetaInfoHolder,
+                siddhiAppContext, list, map, queryName);
     }
 }
